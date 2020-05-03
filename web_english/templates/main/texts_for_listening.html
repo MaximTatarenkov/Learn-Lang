@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+{% if texts|length > 0%}
+<table class="table">
+    <thead>
+        <tr>
+            <th>Название</th>
+            <th>Длительность</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for text in texts %}
+        <tr>
+            <td><a href="{{ url_for('main.learning', text_id=text.id) }}">{{ text.title_text }}</a></td>
+            <td>{{ text.duration_for_humans }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<h2>Нет доступных текстов</h2>
+{% endif %}
+{% endblock %}

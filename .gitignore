@@ -1,0 +1,13 @@
+.vscode
+__pycache__
+tmp/*
+!tmp/.gitkeep
+migrations
+*.db
+env/
+.DS_Store
+*.mp3
+*.wav
+*.ogg
+*.bundle.js
+*.ogg

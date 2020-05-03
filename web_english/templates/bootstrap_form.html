@@ -1,0 +1,10 @@
+<form action="{{ form_action }}" method="POST" {% if enctype %}enctype="{{ enctype }}"{% endif %}>
+    {{ form.hidden_tag() }}
+    {% for field in form.fields %}
+    <p>
+        {{ field.label }} {% if field.name in form.required_fields%}*{% endif %}<br>
+        {{ field(class_='form-control') }}
+    </p>
+    {% endfor %}
+    <p>{{ form.submit(class_='btn btn-primary') }}</p>
+</form>

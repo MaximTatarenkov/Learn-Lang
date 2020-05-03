@@ -1,0 +1,57 @@
+{% extends "base.html" %} {% block content %}
+<h1><p>{{ title }}</p></h1>
+<h4>
+  <ol>
+    {% for text in texts | reverse %}
+    <li class="list-text" data-id="{{ text.id }}">
+      {% if not text.is_ready %}
+      <div class="upload-text">
+        <a href="{{ url_for('text.edit_text', text_id=text.id) }}"
+          >{{ text.title_text }}</a
+        >
+        <div class="progress {{ text.id }}">
+          <div class="progress-bar {{ text.id }}" style="width: 0%;">0%</div>
+        </div>
+      </div>
+      {% else %}
+      <a href="{{ url_for('text.edit_text', text_id=text.id) }}"
+        >{{ text.title_text }}</a
+        >
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+</h4>
+{% endblock %} {% block js %}
+<script src="{{ url_for('static', filename='jquery-3.5.0.js') }}"></script>
+<script>
+  $(document).ready(function () {
+    $("li.list-text").each(function (index, element) {
+      let dataId = $(element).attr("data-id");
+      let url = "progress/" + dataId;
+      let timerId = setInterval(function () {
+        $.getJSON(url, function (result) {
+          console.log(result);
+          if (result.status == 2) {
+            $(`.progress-bar.${dataId}`)
+              .css("width", result.progress + "%")
+              .text(Math.round(result.progress) + "%");
+          } else if (result.status == 3) {
+            clearInterval(timerId);
+            $(`.progress-bar.${dataId}`)
+              .css("width", result.progress + "%")
+              .text(Math.round(result.progress) + "%");
+            setTimeout(anythingRemove, 2000, $(`.progress.${dataId}`));
+          } else {
+            // Вывести Error
+            clearInterval(timerId);
+          }
+        });
+      }, 2000);
+    });
+    function anythingRemove(anything) {
+      anything.remove();
+    }
+  });
+</script>
+{% endblock %}
