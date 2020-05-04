@@ -51,7 +51,7 @@ def process_register():
         error = list(form.errors.values())
         flash(error[0][0])
         return redirect(url_for("auth.register"))
-    
+
     new_user = User(
         username=form.username.data,
         password=form.password.data,

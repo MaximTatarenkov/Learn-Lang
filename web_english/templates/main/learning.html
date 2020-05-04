@@ -37,20 +37,46 @@
       sentencesRu,
       pointInChunk,
       pointInText,
-      punctuation;
+      punctuation,
+      canvas = document.createElement("canvas"),
+      ctx = canvas.getContext("2d"),
+      length_sentence;
+    ctx.font = "19px Times New Roman serif";
+    console.log(
+      ctx.measureText(
+        "The horse ran fast and then suddenly stopped, almost throwing Ichabod forward to the ground. There, in the dark"
+      ).width
+    );
+    console.log(
+      ctx.measureText(
+        "during the American revolutionary war. His head was shot off. Every night he rises from his burial place, jumps"
+      ).width
+    );
     // currentBack,
     // currentForvard;
-    const INTERVAL = 3;
+    const INTERVAL = 2;
 
     // Формируем главный текст, ищем в чанках знаки пунктуации и по ним создаем массив для дальнейшего использования при выводе предложений
     (function (url) {
       $.getJSON(url, function (result) {
+        let length_sentence = 0;
         for (let i = 0; i < result.chunks_for_sending.length; i++) {
           chunk = result.chunks_for_sending[i];
-          text_en.insertAdjacentHTML(
-            "beforeend",
-            `<nobr id=\"a${i}\" class=\"chunk active-remove\"> ${chunk}</nobr>`
-          );
+          length_sentence += ctx.measureText(chunk).width;
+          // Ширина контейнера 900 => длина предложения должна быть не больше примерно 860
+          if (length_sentence > 840) {
+            text_en.insertAdjacentHTML(
+              "beforeend",
+              `<br><span id=\"a${i}\" class=\"chunk active-remove\">${chunk}</span>`
+            );
+            length_sentence = ctx.measureText(chunk).width;
+          } else {
+            text_en.insertAdjacentHTML(
+              "beforeend",
+              `<span id=\"a${i}\" class=\"chunk active-remove\"> ${chunk}</span>`
+            );
+          }
+
           if (
             chunk.indexOf(".") != -1 ||
             chunk.indexOf("!") != -1 ||
@@ -149,7 +175,7 @@
       .getElementById("play")
       .addEventListener("click", playButtonHandler);
 
-    // Пауза (возвращает на ближий интервал в 3 секунды) ДОРАБОТАТЬ!
+    // Пауза (возвращает на ближий интервал в 2 секунды) ДОРАБОТАТЬ!
     set_pause = function () {
       if (stopPlay) {
         return;
@@ -205,7 +231,7 @@
 
     // Возврат к началу при завершении воспроизведения
     audio.addEventListener("ended", function () {
-      stop_playing();
+      setTimeout(stop_playing, 4000);
     });
 
     // Пауза при сворачивании окна
@@ -308,17 +334,27 @@
     margin-bottom: 20px;
   }
   #text-sentence-en {
-    font-size: 1.5rem;
+    font-size: 25px;
   }
   #text-sentence-ru {
-    font-size: 1.5rem;
+    font-size: 25px;
   }
   .chunk {
-    font-size: 1.1rem;
+    font-size: 19px;
     font-family: "Times New Roman", Times, serif;
     position: relative;
-    overflow: hidden;
   }
+  /* .chunk:after {
+    content: "";
+    position: absolute;
+    left: 0;
+    display: inline-block;
+    height: 1em;
+    width: 0%;
+    border-bottom: 1px solid;
+    margin-top: 5px;
+    transition: width 3s linear;
+  } */
   .chunk:before {
     position: absolute;
     height: 1px;
@@ -326,7 +362,7 @@
     left: 0;
     background: black;
     content: "";
-    transition: width 3s linear;
+    transition: width 2s linear;
     bottom: -1px;
   }
   .chunk.active:before {

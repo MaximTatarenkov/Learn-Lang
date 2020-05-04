@@ -95,7 +95,7 @@ class Content(db.Model, ServiceMixin):
     @property
     def is_ready(self):
         return self.status == Content.DONE
-    
+
     @property
     def duration_for_humans(self):
         """
