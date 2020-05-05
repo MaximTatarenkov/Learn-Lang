@@ -42,16 +42,6 @@
       ctx = canvas.getContext("2d"),
       length_sentence;
     ctx.font = "19px Times New Roman serif";
-    console.log(
-      ctx.measureText(
-        "The horse ran fast and then suddenly stopped, almost throwing Ichabod forward to the ground. There, in the dark"
-      ).width
-    );
-    console.log(
-      ctx.measureText(
-        "during the American revolutionary war. His head was shot off. Every night he rises from his burial place, jumps"
-      ).width
-    );
     // currentBack,
     // currentForvard;
     const INTERVAL = 2;
@@ -135,12 +125,14 @@
             break;
           }
         }
-        $("#text-sentence-en").replaceWith(
-          `<span id=\"text-sentence-en\">${sentencesEn[n]}</span>`
-        );
-        $("#text-sentence-ru").replaceWith(
-          `<span id=\"text-sentence-ru\">${sentencesRu[n]}</span>`
-        );
+        if (sentencesEn[n]) {
+          $("#text-sentence-en").replaceWith(
+            `<span id=\"text-sentence-en\">${sentencesEn[n]}</span>`
+          );
+          $("#text-sentence-ru").replaceWith(
+            `<span id=\"text-sentence-ru\">${sentencesRu[n]}</span>`
+          );
+        }
       });
     })();
 
@@ -344,17 +336,6 @@
     font-family: "Times New Roman", Times, serif;
     position: relative;
   }
-  /* .chunk:after {
-    content: "";
-    position: absolute;
-    left: 0;
-    display: inline-block;
-    height: 1em;
-    width: 0%;
-    border-bottom: 1px solid;
-    margin-top: 5px;
-    transition: width 3s linear;
-  } */
   .chunk:before {
     position: absolute;
     height: 1px;

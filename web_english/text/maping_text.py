@@ -1,6 +1,7 @@
 import os
 import re
 
+from logmmse import logmmse_from_file
 from pydub import AudioSegment
 import requests
 
@@ -44,6 +45,9 @@ class Recognizer():
     def chunk_audiofile(self, title):
         folder_name = f'{Config.UPLOADED_AUDIOS_DEST}/{create_name(self.title)}'
         os.mkdir(folder_name)
+        # audiofile = f'{folder_name}.wav'
+        # logmmse_from_file(audiofile, output_file=f'{folder_name}1.wav')
+        # audio = AudioSegment.from_wav(f'{folder_name}1.wav')
         audiofile = f'{folder_name}.mp3'
         audio = AudioSegment.from_mp3(audiofile)
         length_audio = len(audio)
