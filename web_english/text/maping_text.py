@@ -1,7 +1,8 @@
 import os
 import re
 
-from logmmse import logmmse_from_file
+from fuzzywuzzy import fuzz
+# from logmmse import logmmse_from_file
 from pydub import AudioSegment
 import requests
 
@@ -91,22 +92,41 @@ class Recognizer():
     def maping_text(self, chunk_result, word_number):
         content = Content.query.filter(Content.title_text == self.title).first()
         medium_word = None
+        chunk_result = chunk_result.lower()
+        change_chunk_result = chunk_result
         # Убираем из текста все знаки препинания и разбиваем по словам
         split_text = re.sub(r"[.,!?;:]", r"", content.text_en).lower().split()
         # 15  - это примерное кол-во слов, которое диктор может произнести за 3 секунды
-        segment_split_text = split_text[word_number: word_number + 15]
+        if word_number == 0:
+            segment_split_text = split_text[word_number: word_number + 15]
+        else:
+            segment_split_text = split_text[word_number + 1: word_number + 15]
         chunk_text = ' '.join(segment_split_text)
         # Разбиваем распознанный отрывок на слова и приводим к нижнему регистру
-        split_chunk_result = chunk_result.lower().split()
-
+        split_chunk_result = chunk_result.split()
         # Перебираем каждое слово в оригинальном отрезке
         for word in segment_split_text:
-
-            # Если находим это слово в распознанном, то записываем его как последнее найденное слово
-            # и удаляем первое это слово из распознанного отрывка, чтобы больше не встречалось
-            if word in split_chunk_result:
-                medium_word = word
-                split_chunk_result.remove(word)
+            if split_chunk_result:
+                # Если находим это слово в распознанном, то записываем его как последнее найденное слово
+                # и удаляем первое это слово из распознанного отрывка, чтобы больше не встречалось
+                for chunk_word in split_chunk_result:
+                    fuzzy = fuzz.ratio(word, chunk_word)
+                    if fuzzy > 70:
+                        medium_word = word
+                        index_word = split_chunk_result.index(chunk_word)
+                        split_chunk_result = split_chunk_result[index_word + 1:]
+                        change_chunk_result = change_chunk_result.replace(chunk_word, word, 1)
+                        break
+                        # if fuzzy < 100:
+                        #     change_chunk_result = change_chunk_result.replace(chunk_word, word, 1)
+                        #     print('111')
+                    # print(fuzzy[1])
+                    # print(change_chunk_result)
+            else:
+                break
+            # if word in split_chunk_result:
+            #     medium_word = word
+            #     split_chunk_result.remove(word)
         if medium_word is None:
             chunk_maping = [chunk_result, content.id, '', word_number]
             return chunk_maping, chunk_text
@@ -117,14 +137,20 @@ class Recognizer():
         # индексу найденного последнего слова индекс предыдущего во всем тексте - это
         # будет индекс нашего найденного последнего слова
         if number_duplicate == 0:
-            word_number = segment_split_text.index(medium_word) + word_number
-
+            if word_number != 0:
+                word_number += segment_split_text.index(medium_word) + 1
+            else:
+                word_number += segment_split_text.index(medium_word)
         # Иначе ищем индекс последнего слова, которое было по порядку на том месте,
         # сколько встречалось в распознанном тексте
         else:
-            number_word_cut_split_text = duplicate_word(segment_split_text, medium_word, number_duplicate)
-            word_number = number_word_cut_split_text + word_number
-        chunk_maping = [chunk_result, content.id, medium_word, word_number]
+            number_word_segment_split_text = duplicate_word(segment_split_text, medium_word, number_duplicate)
+            if word_number != 0:
+                word_number = number_word_segment_split_text + word_number - 1
+            else:
+                word_number = number_word_segment_split_text + word_number
+        # chunk_maping = [chunk_result, content.id, medium_word, word_number]
+        chunk_maping = [change_chunk_result, content.id, medium_word, word_number]
         return chunk_maping, chunk_text
 
     def list_chunks_text(self, text_id, chunks_result):
@@ -178,7 +204,10 @@ def duplicate_word(segment_split_text, medium_word, number_duplicate):
             break
         duplicates.append(duplicate)
         start_at = duplicate
-    result = duplicates[number_duplicate]
+    if number_duplicate <= len(duplicates) - 1:
+        result = duplicates[number_duplicate]
+    else:
+        result = duplicates[-1]
     return result
 
 
