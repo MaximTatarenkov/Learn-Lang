@@ -1,7 +1,7 @@
 import os
 import os.path
 
-from flask import render_template, url_for, redirect, flash, request, jsonify
+from flask import render_template, url_for, redirect, flash, request, jsonify, send_from_directory
 from flask_login import login_required
 from pydub import AudioSegment
 
@@ -71,13 +71,18 @@ def edit_text(text_id):
     title_page = f'Правка {title_text}'
     chunks = Chunk.query.filter(Chunk.content_id == text.id).all()
     chunks_result = []
+    count_list = []
+    count = 0
     for chunk in chunks:
         recognized_chunk = chunk.chunks_recognized.lower()
         chunks_result.append(recognized_chunk)
+        count += 1
+        count_list.append(count)
     recognizer = Recognizer(title_text)
     chunks_text = recognizer.list_chunks_text(text_id, chunks_result)
-    merged_chunks = list(zip(chunks_text, chunks_result))
+    merged_chunks = list(zip(chunks_text, chunks_result, count_list))
     return render_template('text/edit_text.html',
+                           text=text,
                            title_page=title_page,
                            merged_chunks=merged_chunks,
                            form=form,
@@ -115,3 +120,11 @@ def progress_bar(text_id):
     progress = amount_text_chunks / amount_audio_chunks * 100
     data = {'progress': progress, 'status': text.status}
     return jsonify(data)
+
+
+@login_required
+def serve_audio(text_id, count):
+    text = Content.query.get(text_id)
+    folder = f"{Config.UPLOADED_AUDIOS_DEST}/{create_name(text.title_text)}"
+    filename = f"chunk{count}.ogg"
+    return send_from_directory(folder, filename)

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>{{ title_page }}</h1>
-<form action="{{ form_action }}" method="POST">            
+<form action="{{ form_action }}" method="POST">
     {{ form.hidden_tag() }}
     <ol>
         <div class='form-group'>
@@ -10,6 +10,7 @@
                     Оригинал: {{ chunk[0] }}<br>
                     {{ form.chunk_recognized.label }}
                     {{ form.chunk_recognized(value=chunk[1]) }}
+                    <audio src="{{ url_for('text.serve_audio', text_id=text.id, count=chunk[2]) }}" controls></audio>
                 </li>
             {% endfor %}
         </div>

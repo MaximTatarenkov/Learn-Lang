@@ -11,8 +11,8 @@ from web_english import db, celery
 from web_english.models import Chunk, Content
 
 
-@celery.task
-def recognition_start(title):
+@celery.task(bind=True)
+def recognition_start(self, title):
     text = Content.query.filter(Content.title_text == title).first()
     text.status = Content.PROCESSING
     db.session.add(text)
@@ -25,9 +25,12 @@ def recognition_start(title):
         chunks = recognizer.chunk_audiofile(title)
         for chunk in chunks:
             chunk_result = recognizer.send_ya_speech_kit(chunk)
-            chunk_maping = recognizer.maping_text(chunk_result, chunk_maping[3])[0]
-            current_second += Config.INTERVAL
-            recognizer.save_chunk(chunk_maping, current_second)
+            if chunk_result:
+                chunk_maping = recognizer.maping_text(chunk_result, chunk_maping[3])[0]
+                current_second += Config.INTERVAL
+                recognizer.save_chunk(chunk_maping, current_second)
+            else:
+                self.retry(countdown=20, max_retries=3)
         text.status = Content.DONE
         db.session.add(text)
         db.session.commit()
@@ -84,10 +87,11 @@ class Recognizer():
         url = "https://stt.api.cloud.yandex.net/speech/v1/stt:recognize"
         headers = {"Authorization": f"Api-Key {Config.API_KEY}"}
         response = requests.post(url, params=params, data=data, headers=headers)
+        print(response.json())
         chunk = response.json()
         if chunk.get("error_code") is None:
             return chunk.get("result")
-        return False
+        return "errorChunkOrSilence"
 
     def maping_text(self, chunk_result, word_number):
         content = Content.query.filter(Content.title_text == self.title).first()
