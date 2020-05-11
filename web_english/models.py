@@ -1,12 +1,15 @@
 from datetime import datetime
 from flask import current_app
 from flask_login import UserMixin
+
 from sqlalchemy.ext.declarative import declared_attr
 from time import time
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 
 from web_english import db, login_manager
+
+from sqlalchemy.dialects.postgresql import JSON
 
 
 class ServiceMixin:
@@ -74,8 +77,10 @@ class Role(db.Model):
 class UserRoles(db.Model):
     __tablename__ = "User_roles"
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer(), db.ForeignKey('Users.id', ondelete='CASCADE'))
-    role_id = db.Column(db.Integer(), db.ForeignKey('Roles.id', ondelete='CASCADE'))
+    user_id = db.Column(db.Integer(), db.ForeignKey(
+        'Users.id', ondelete='CASCADE'))
+    role_id = db.Column(db.Integer(), db.ForeignKey(
+        'Roles.id', ondelete='CASCADE'))
 
 
 class Content(db.Model, ServiceMixin):
@@ -91,6 +96,8 @@ class Content(db.Model, ServiceMixin):
     duration = db.Column(db.Integer)
     status = db.Column(db.Integer, default=QUEUED)
     chunks = db.relationship('Chunk', backref='content', lazy='dynamic')
+    translation = db.relationship(
+        'Translation', backref='content', lazy='dynamic')
 
     @property
     def is_ready(self):
@@ -122,7 +129,28 @@ class Chunk(db.Model, ServiceMixin):
     content_id = db.Column(db.Integer, db.ForeignKey("content.id"))
 
     def __str__(self):
-        return f"<Chunks {self.chunks_recognized}>"
+        return f"<Chunk {self.chunks_recognized}>"
+
+
+class Word(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    word = db.Column(db.String, unique=True, nullable=False)
+    translation_word = db.Column(JSON, nullable=False)
+
+    def __repr__(self):
+        return f"<Word {self.word}>"
+
+
+class Translation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    word = db.Column(db.String, nullable=False)
+    text_id = db.Column(db.Integer, db.ForeignKey("content.id"))
+    sentence = db.Column(db.Integer)
+    in_en_sentence = db.Column(db.String)
+    in_ru_sentence = db.Column(db.String)
+
+    def __repr__(self):
+        return f"<Translation {self.word}>"
 
 
 @login_manager.user_loader

@@ -40,12 +40,13 @@ class Config:
 
 class DevConfig(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(BASE_DIR, "dev.db")
+    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:1@127.0.0.1:5432/learn_lang'
 
 
 class ProductionConfig(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(BASE_DIR, "database.db")
+    SQLALCHEMY_DATABASE_URI = "sqlite:///" + \
+        os.path.join(BASE_DIR, "database.db")
 
 
 class TestConfig(Config):

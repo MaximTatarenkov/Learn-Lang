@@ -11,8 +11,8 @@ from web_english import db, celery
 from web_english.models import Chunk, Content
 
 
-@celery.task(bind=True)
-def recognition_start(self, title):
+@celery.task
+def recognition_start(title):
     text = Content.query.filter(Content.title_text == title).first()
     text.status = Content.PROCESSING
     db.session.add(text)
@@ -21,16 +21,13 @@ def recognition_start(self, title):
     current_second = 0
     chunk_maping = ['', 0, '', 0]
     recognizer = Recognizer(title)
+    chunks = recognizer.chunk_audiofile(title)
     try:
-        chunks = recognizer.chunk_audiofile(title)
         for chunk in chunks:
-            chunk_result = recognizer.send_ya_speech_kit(chunk)
-            if chunk_result:
-                chunk_maping = recognizer.maping_text(chunk_result, chunk_maping[3])[0]
-                current_second += Config.INTERVAL
-                recognizer.save_chunk(chunk_maping, current_second)
-            else:
-                self.retry(countdown=20, max_retries=3)
+            chunk_result = process_yandex(chunk, title)
+            chunk_maping = recognizer.maping_text(chunk_result, chunk_maping[3])[0]
+            current_second += Config.INTERVAL
+            recognizer.save_chunk(chunk_maping, current_second)
         text.status = Content.DONE
         db.session.add(text)
         db.session.commit()
@@ -39,6 +36,31 @@ def recognition_start(self, title):
         db.session.add(text)
         db.session.commit()
         raise
+
+
+# @celery.task(bind=True)
+# def process_yandex(self, chunk, title):
+#     recognizer = Recognizer(title)
+#     try:
+#         chunk_result = recognizer.send_ya_speech_kit(chunk)
+#     except Exception as exc:
+#         self.retry(exc=exc, countdown=30)
+#     if chunk_result:
+#         return chunk_result
+#     else:
+#         return " "
+
+@celery.task(bind=True)
+def process_yandex(self, chunk, title):
+    recognizer = Recognizer(title)
+    try:
+        chunk_result = recognizer.send_ya_speech_kit(chunk)
+        if chunk_result:
+            return chunk_result
+        else:
+            return " "
+    except Exception as exc:
+        self.retry(exc=exc, max_retries=3)
 
 
 class Recognizer():
@@ -150,7 +172,7 @@ class Recognizer():
         else:
             number_word_segment_split_text = duplicate_word(segment_split_text, medium_word, number_duplicate)
             if word_number != 0:
-                word_number = number_word_segment_split_text + word_number - 1
+                word_number = number_word_segment_split_text + word_number + 1
             else:
                 word_number = number_word_segment_split_text + word_number
         # chunk_maping = [chunk_result, content.id, medium_word, word_number]

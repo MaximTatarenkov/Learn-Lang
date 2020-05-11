@@ -13,7 +13,7 @@ def index():
 @login_required
 def learning(text_id):
     text = Content.query.filter(Content.id == text_id).first()
-    return render_template("main/learning.html", text=text)
+    return render_template("main/learning.html", text=text, title=f'{text.title_text} | Learn Lang')
 
 
 @login_required
@@ -58,7 +58,7 @@ def serve_audio(text_id):
 
 @login_required
 def text_list_for_student():
-    title = 'Тексты для изучения'
+    title = 'Тексты для изучения | Learn Lang'
     texts = Content.query.filter_by(status=Content.DONE).all()
     return render_template(
         'main/texts_for_listening.html',
