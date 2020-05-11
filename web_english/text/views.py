@@ -10,6 +10,7 @@ from web_english.auth.helpers import roles_required
 from web_english import db
 from web_english.text.forms import TextForm, EditForm
 from web_english.text.maping_text import Recognizer, create_name, recognition_start
+from web_english.text.translation import translation_start
 from web_english.models import Content, Chunk
 from web_english import audios
 
@@ -45,6 +46,7 @@ def process_create():
         db.session.add(text)
         db.session.commit()
         recognition_start.delay(form.title_text.data)
+        translation_start.delay(form.text_en.data)
         flash('Ваш текст сохранен! Обработка текста может занять некоторое время.')
         return redirect(url_for('text.texts_list'))
     return redirect(url_for('text.create'))

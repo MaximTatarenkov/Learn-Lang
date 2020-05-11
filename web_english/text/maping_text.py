@@ -25,7 +25,8 @@ def recognition_start(title):
     try:
         for chunk in chunks:
             chunk_result = process_yandex(chunk, title)
-            chunk_maping = recognizer.maping_text(chunk_result, chunk_maping[3])[0]
+            chunk_maping = recognizer.maping_text(
+                chunk_result, chunk_maping[3])[0]
             current_second += Config.INTERVAL
             recognizer.save_chunk(chunk_maping, current_second)
         text.status = Content.DONE
@@ -37,18 +38,6 @@ def recognition_start(title):
         db.session.commit()
         raise
 
-
-# @celery.task(bind=True)
-# def process_yandex(self, chunk, title):
-#     recognizer = Recognizer(title)
-#     try:
-#         chunk_result = recognizer.send_ya_speech_kit(chunk)
-#     except Exception as exc:
-#         self.retry(exc=exc, countdown=30)
-#     if chunk_result:
-#         return chunk_result
-#     else:
-#         return " "
 
 @celery.task(bind=True)
 def process_yandex(self, chunk, title):
@@ -95,7 +84,8 @@ class Recognizer():
             chunk_name = f'{folder_name}/chunk{counter}.ogg'
             chunks.append(chunk_name)
             chunk.export(chunk_name, format='ogg')
-            print(f"Processing {chunk_name}chunk{counter}. Start = {start} End = {end}")
+            print(
+                f"Processing {chunk_name}chunk{counter}. Start = {start} End = {end}")
             counter += 1
         return chunks
 
@@ -103,12 +93,13 @@ class Recognizer():
         with open(chunk, "rb") as f:
             data = f.read()
         params = {
-                    'lang': 'en-US',
+            'lang': 'en-US',
                     'folderId': Config.FOLDER_ID
         }
         url = "https://stt.api.cloud.yandex.net/speech/v1/stt:recognize"
         headers = {"Authorization": f"Api-Key {Config.API_KEY}"}
-        response = requests.post(url, params=params, data=data, headers=headers)
+        response = requests.post(
+            url, params=params, data=data, headers=headers)
         print(response.json())
         chunk = response.json()
         if chunk.get("error_code") is None:
@@ -116,7 +107,8 @@ class Recognizer():
         return "errorChunkOrSilence"
 
     def maping_text(self, chunk_result, word_number):
-        content = Content.query.filter(Content.title_text == self.title).first()
+        content = Content.query.filter(
+            Content.title_text == self.title).first()
         medium_word = None
         chunk_result = chunk_result.lower()
         change_chunk_result = chunk_result
@@ -141,7 +133,8 @@ class Recognizer():
                         medium_word = word
                         index_word = split_chunk_result.index(chunk_word)
                         split_chunk_result = split_chunk_result[index_word + 1:]
-                        change_chunk_result = change_chunk_result.replace(chunk_word, word, 1)
+                        change_chunk_result = change_chunk_result.replace(
+                            chunk_word, word, 1)
                         break
                         # if fuzzy < 100:
                         #     change_chunk_result = change_chunk_result.replace(chunk_word, word, 1)
@@ -170,13 +163,15 @@ class Recognizer():
         # Иначе ищем индекс последнего слова, которое было по порядку на том месте,
         # сколько встречалось в распознанном тексте
         else:
-            number_word_segment_split_text = duplicate_word(segment_split_text, medium_word, number_duplicate)
+            number_word_segment_split_text = duplicate_word(
+                segment_split_text, medium_word, number_duplicate)
             if word_number != 0:
                 word_number = number_word_segment_split_text + word_number + 1
             else:
                 word_number = number_word_segment_split_text + word_number
         # chunk_maping = [chunk_result, content.id, medium_word, word_number]
-        chunk_maping = [change_chunk_result, content.id, medium_word, word_number]
+        chunk_maping = [change_chunk_result,
+                        content.id, medium_word, word_number]
         return chunk_maping, chunk_text
 
     def list_chunks_text(self, text_id, chunks_result):

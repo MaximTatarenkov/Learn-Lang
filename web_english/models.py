@@ -9,7 +9,7 @@ import jwt
 
 from web_english import db, login_manager
 
-from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.dialects.postgresql import JSONB
 
 
 class ServiceMixin:
@@ -135,7 +135,7 @@ class Chunk(db.Model, ServiceMixin):
 class Word(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     word = db.Column(db.String, unique=True, nullable=False)
-    translation_word = db.Column(JSON, nullable=False)
+    translation_word = db.Column(JSONB, nullable=False)
 
     def __repr__(self):
         return f"<Word {self.word}>"
