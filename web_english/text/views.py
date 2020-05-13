@@ -46,7 +46,7 @@ def process_create():
         db.session.add(text)
         db.session.commit()
         recognition_start.delay(form.title_text.data)
-        translation_start.delay(form.text_en.data)
+        translation_start.delay(form.title_text.data)
         flash('Ваш текст сохранен! Обработка текста может занять некоторое время.')
         return redirect(url_for('text.texts_list'))
     return redirect(url_for('text.create'))

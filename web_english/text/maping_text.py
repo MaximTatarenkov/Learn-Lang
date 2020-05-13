@@ -100,7 +100,7 @@ class Recognizer():
         headers = {"Authorization": f"Api-Key {Config.API_KEY}"}
         response = requests.post(
             url, params=params, data=data, headers=headers)
-        print(response.json())
+        # print(response.json())
         chunk = response.json()
         if chunk.get("error_code") is None:
             return chunk.get("result")
