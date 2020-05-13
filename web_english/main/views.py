@@ -12,7 +12,6 @@ def index():
 
 @login_required
 def learning(text_id):
-    print(translation_markup(text_id))
     text = Content.query.filter(Content.id == text_id).first()
     return render_template("main/learning.html", text=text, title=f'{text.title_text} | Learn Lang')
 
@@ -59,8 +58,19 @@ def split_text_by_sentences(text):
     for i in punctuation:
         changed_text = text.replace(i, f"{i}|")
         text = changed_text
-    split_text_by_sentences = text.split("|")
+    split_text_by_sentences = text.split("| ")
+    for id, item in enumerate(split_text_by_sentences):
+        split_text_by_sentences[id] = item.replace("|", "").split()
     return split_text_by_sentences
+
+
+# def split_text_by_sentences(text):
+#     punctuation = [".", "!", "?", ";"]
+#     for i in punctuation:
+#         changed_text = text.replace(i, f"{i}|")
+#         text = changed_text
+#     split_text_by_sentences = text.split("|")
+#     return split_text_by_sentences
 
 
 @login_required

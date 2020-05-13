@@ -7,8 +7,10 @@ $(document).ready(function () {
     dataId = $("#text_en").attr("data-id"),
     url = "send_chunks/" + dataId,
     pointsTime = [0],
-    sentencesEn,
-    sentencesRu,
+    sentencesEnArray,
+    sentencesRuArray,
+    sentenceEn = "",
+    sentenceRu = "",
     pointInChunk,
     pointInText,
     punctuation,
@@ -56,8 +58,8 @@ $(document).ready(function () {
           }
         }
       }
-      sentencesEn = result.sentences_en;
-      sentencesRu = result.sentences_ru;
+      sentencesEnArray = result.sentences_en;
+      sentencesRuArray = result.sentences_ru;
       audio.currentTime = 0;
     });
   })(url);
@@ -112,18 +114,50 @@ $(document).ready(function () {
   };
 
   addSentences = function (count) {
-    if ($("#text-sentence-en").text() !== sentencesEn[count]) {
+    // let sentenceEn = "";
+    // let sentenceRu = "";
+
+    for (let se = 0; se < sentencesEnArray[count].length; se++) {
+      if (sentenceEn) {
+        sentenceEn += `<span id=\"word${se}\" class=\"wordsEn\"> ${sentencesEnArray[count][se]}</span>`;
+      } else {
+        sentenceEn = `<span id=\"word${se}\" class=\"wordsEn\">${sentencesEnArray[count][se]}</span>`;
+      }
+    }
+
+    for (let sr = 0; sr < sentencesRuArray[count].length; sr++) {
+      if (sentenceRu) {
+        sentenceRu += `<span id=\"word${sr}\" class=\"wordsRu\"> ${sentencesRuArray[count][sr]}</span>`;
+      } else {
+        sentenceRu = `<span id=\"word${sr}\" class=\"wordsRu\">${sentencesRuArray[count][sr]}</span>`;
+      }
+    }
+
+    if ($("#text-sentence-en").attr("class") !== `sentenceEn${count}`) {
       $("#text-sentence-en").replaceWith(
-        `<span id=\"text-sentence-en\">${sentencesEn[count]}</span>`
+        `<span id=\"text-sentence-en\" class=\"sentenceEn${count}\">${sentenceEn}</span>`
       );
     }
 
-    if ($("#text-sentence-ru").text() !== sentencesRu[count]) {
+    if ($("#text-sentence-ru").attr("class") !== `sentenceRu${count}`) {
       $("#text-sentence-ru").replaceWith(
-        `<span id=\"text-sentence-ru\">${sentencesRu[count]}</span>`
+        `<span id=\"text-sentence-ru\" class=\"sentenceRu${count}\">${sentenceRu}</span>`
       );
     }
   };
+  // addSentences = function (count) {
+  //   if ($("#text-sentence-en").text() !== sentencesEnArray[count]) {
+  //     $("#text-sentence-en").replaceWith(
+  //       `<span id=\"text-sentence-en\">${sentencesEnArray[count]}</span>`
+  //     );
+  //   }
+
+  //   if ($("#text-sentence-ru").text() !== sentencesRuArray[count]) {
+  //     $("#text-sentence-ru").replaceWith(
+  //       `<span id=\"text-sentence-ru\">${sentencesRuArray[count]}</span>`
+  //     );
+  //   }
+  // };
 
   // Play
   playFromBeginning = function () {
