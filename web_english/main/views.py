@@ -2,7 +2,7 @@ from flask import render_template, jsonify, send_from_directory
 from flask_login import login_required
 
 from config import Config
-from web_english.models import Content, Chunk
+from web_english.models import Content, Chunk, Translation
 from web_english.text.maping_text import create_name
 
 
@@ -12,6 +12,7 @@ def index():
 
 @login_required
 def learning(text_id):
+    print(translation_markup(text_id))
     text = Content.query.filter(Content.id == text_id).first()
     return render_template("main/learning.html", text=text, title=f'{text.title_text} | Learn Lang')
 
@@ -30,14 +31,27 @@ def send_chunks(text_id):
         split_chunk = split_text[word_number_start:word_number_end]
         join_chunk = " ".join(split_chunk)
         chunks_for_sending.append(join_chunk)
+    translations = translation_markup(text_id)
     sentences_en = split_text_by_sentences(text.text_en)
     sentences_ru = split_text_by_sentences(text.text_ru)
     sending = {
+        "translation_markup": translations,
         "chunks_for_sending": chunks_for_sending,
         "sentences_en": sentences_en,
         "sentences_ru": sentences_ru,
     }
     return jsonify(sending)
+
+
+def translation_markup(text_id):
+    markups = Translation.query.filter_by(text_id=text_id).all()
+    translation_markup = []
+    # count = 0
+    for markup in markups:
+        translation_markup.append({"sentence": markup.sentence,
+                                   "in_en": markup.in_en_sentence,
+                                   "in_ru": markup.in_ru_sentence})
+    return translation_markup
 
 
 def split_text_by_sentences(text):

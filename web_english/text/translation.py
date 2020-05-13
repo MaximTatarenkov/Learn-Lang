@@ -44,7 +44,6 @@ def translation_word(word):
     if translated_text.get("def"):
         translation = {}
         for w in translated_text.get("def"):
-            # count = 0
             if w.get('pos') and w.get('pos') != "foreign word":
                 part_of_speech = w['pos']
                 translation[part_of_speech] = []
@@ -54,9 +53,6 @@ def translation_word(word):
                         for word_syn in word['syn']:
                             translation[part_of_speech].append(
                                 word_syn['text'])
-                    # count += 1
-                    # if count == 3:
-                    #     break
         return translation
     return False
 
@@ -74,28 +70,37 @@ def translation_in_context(text_id):
             translation_word_dict = Word.query.filter_by(word=en_word).first()
             if translation_word_dict:
                 translation_word_value = translation_word_dict.translation_word.values()
-                translation_word = []
+                word_translations = []
                 for w in translation_word_value:
-                    translation_word += w
-                for translation in translation_word:
-                    count_word_in_ru_sentence = 0
-                    for russian_word in split_ru_sentence:
-                        fuzzy = fuzz.ratio(translation, russian_word)
-                        if fuzzy > 70:
-                            save = Translation(word=en_word,
-                                               text_id=text_id,
-                                               sentence=count_sentence,
-                                               in_en_sentence=count_word_in_en_sentence,
-                                               in_ru_sentence=count_word_in_ru_sentence
-                                               )
-                            db.session.add(save)
-                            count_word_in_ru_sentence = 0
-                            # split_ru_sentence.remove(russian_word)
-                            break
-                        count_word_in_ru_sentence += 1
-                    if fuzzy > 70:
-                        break
+                    word_translations += w
+                saving_comparison_results(word_translations, split_ru_sentence,
+                                          en_word, text_id, count_sentence,
+                                          count_word_in_en_sentence)
             count_word_in_en_sentence += 1
         count_word_in_en_sentence = 0
         count_sentence += 1
+
+
+def saving_comparison_results(word_translations, split_ru_sentence,
+                              en_word, text_id, count_sentence,
+                              count_word_in_en_sentence):
+    for translation in word_translations:
+        count_word_in_ru_sentence = 0
+        for russian_word in split_ru_sentence:
+            fuzzy = fuzz.ratio(translation, russian_word)
+            # Если слова похожи на 70%, то...
+            if fuzzy > 70:
+                save = Translation(word=en_word,
+                                   text_id=text_id,
+                                   sentence=count_sentence,
+                                   in_en_sentence=count_word_in_en_sentence,
+                                   in_ru_sentence=count_word_in_ru_sentence
+                                   )
+                db.session.add(save)
+                count_word_in_ru_sentence = 0
+                # split_ru_sentence.remove(russian_word)
+                break
+            count_word_in_ru_sentence += 1
+        if fuzzy > 70:
+            break
     db.session.commit()
