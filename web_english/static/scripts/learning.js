@@ -25,7 +25,7 @@ $(document).ready(function () {
   // Формируем главный текст, ищем в чанках знаки пунктуации и по ним создаем массив для дальнейшего использования при выводе предложений
   (function (url) {
     $.getJSON(url, function (result) {
-      let length_sentence = 0;
+      length_sentence = 0;
       for (let i = 0; i < result.chunks_for_sending.length; i++) {
         chunk = result.chunks_for_sending[i];
         length_sentence += ctx.measureText(chunk).width;
@@ -114,47 +114,58 @@ $(document).ready(function () {
   };
 
   addSentences = function (count) {
-    // let sentenceEn = "";
-    // let sentenceRu = "";
-
-    for (let se = 0; se < sentencesEnArray[count].length; se++) {
-      if (sentenceEn) {
-        sentenceEn += `<span id=\"word${se}\" class=\"wordsEn\"> ${sentencesEnArray[count][se]}</span>`;
-      } else {
-        sentenceEn = `<span id=\"word${se}\" class=\"wordsEn\">${sentencesEnArray[count][se]}</span>`;
-      }
-    }
-
-    for (let sr = 0; sr < sentencesRuArray[count].length; sr++) {
-      if (sentenceRu) {
-        sentenceRu += `<span id=\"word${sr}\" class=\"wordsRu\"> ${sentencesRuArray[count][sr]}</span>`;
-      } else {
-        sentenceRu = `<span id=\"word${sr}\" class=\"wordsRu\">${sentencesRuArray[count][sr]}</span>`;
-      }
-    }
-
     if ($("#text-sentence-en").attr("class") !== `sentenceEn${count}`) {
+      sentenceEn = "";
+      sentenceRu = "";
+      for (let se = 0; se < sentencesEnArray[count].length; se++) {
+        if (sentenceEn) {
+          sentenceEn += `<span id=\"word${se}\" class=\"wordsEn\"> ${sentencesEnArray[count][se]}</span>`;
+        } else {
+          sentenceEn = `<span id=\"word${se}\" class=\"wordsEn\">${sentencesEnArray[count][se]}</span>`;
+        }
+      }
+      for (let sr = 0; sr < sentencesRuArray[count].length; sr++) {
+        if (sentenceRu) {
+          sentenceRu += `<span id=\"word${sr}\" class=\"wordsRu\"> ${sentencesRuArray[count][sr]}</span>`;
+        } else {
+          sentenceRu = `<span id=\"word${sr}\" class=\"wordsRu\">${sentencesRuArray[count][sr]}</span>`;
+        }
+      }
       $("#text-sentence-en").replaceWith(
         `<span id=\"text-sentence-en\" class=\"sentenceEn${count}\">${sentenceEn}</span>`
       );
-    }
-
-    if ($("#text-sentence-ru").attr("class") !== `sentenceRu${count}`) {
       $("#text-sentence-ru").replaceWith(
         `<span id=\"text-sentence-ru\" class=\"sentenceRu${count}\">${sentenceRu}</span>`
       );
     }
   };
+
   // addSentences = function (count) {
-  //   if ($("#text-sentence-en").text() !== sentencesEnArray[count]) {
+  //   if ($("#text-sentence-en").attr("class") !== `sentenceEn${count}`) {
+  //     sentenceEn = "";
+  //     for (let se = 0; se < sentencesEnArray[count].length; se++) {
+  //       if (sentenceEn) {
+  //         sentenceEn += `<span id=\"word${se}\" class=\"wordsEn\"> ${sentencesEnArray[count][se]}</span>`;
+  //       } else {
+  //         sentenceEn = `<span id=\"word${se}\" class=\"wordsEn\">${sentencesEnArray[count][se]}</span>`;
+  //       }
+  //     }
   //     $("#text-sentence-en").replaceWith(
-  //       `<span id=\"text-sentence-en\">${sentencesEnArray[count]}</span>`
+  //       `<span id=\"text-sentence-en\" class=\"sentenceEn${count}\">${sentenceEn}</span>`
   //     );
   //   }
 
-  //   if ($("#text-sentence-ru").text() !== sentencesRuArray[count]) {
+  //   if ($("#text-sentence-ru").attr("class") !== `sentenceRu${count}`) {
+  //     sentenceRu = "";
+  //     for (let sr = 0; sr < sentencesRuArray[count].length; sr++) {
+  //       if (sentenceRu) {
+  //         sentenceRu += `<span id=\"word${sr}\" class=\"wordsRu\"> ${sentencesRuArray[count][sr]}</span>`;
+  //       } else {
+  //         sentenceRu = `<span id=\"word${sr}\" class=\"wordsRu\">${sentencesRuArray[count][sr]}</span>`;
+  //       }
+  //     }
   //     $("#text-sentence-ru").replaceWith(
-  //       `<span id=\"text-sentence-ru\">${sentencesRuArray[count]}</span>`
+  //       `<span id=\"text-sentence-ru\" class=\"sentenceRu${count}\">${sentenceRu}</span>`
   //     );
   //   }
   // };

@@ -64,15 +64,6 @@ def split_text_by_sentences(text):
     return split_text_by_sentences
 
 
-# def split_text_by_sentences(text):
-#     punctuation = [".", "!", "?", ";"]
-#     for i in punctuation:
-#         changed_text = text.replace(i, f"{i}|")
-#         text = changed_text
-#     split_text_by_sentences = text.split("|")
-#     return split_text_by_sentences
-
-
 @login_required
 def serve_audio(text_id):
     text = Content.query.get(text_id)
