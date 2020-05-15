@@ -19,7 +19,8 @@ def learning(text_id):
 @login_required
 def send_chunks(text_id):
     text = Content.query.filter(Content.id == text_id).first()
-    chunks = Chunk.query.filter(Chunk.content_id == text_id).all()
+    chunks = Chunk.query.filter(
+        Chunk.content_id == text_id).order_by(Chunk.word_time).all()
     split_text = text.text_en.split()
     word_number_start = 0
     word_number_end = 0
@@ -45,7 +46,6 @@ def send_chunks(text_id):
 def translation_markup(text_id):
     markups = Translation.query.filter_by(text_id=text_id).all()
     translation_markup = []
-    # count = 0
     for markup in markups:
         translation_markup.append({"sentence": markup.sentence,
                                    "in_en": markup.in_en_sentence,

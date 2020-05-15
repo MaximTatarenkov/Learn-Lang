@@ -71,7 +71,8 @@ def edit_text(text_id):
     text = Content.query.filter(Content.id == text_id).first()
     title_text = text.title_text
     title_page = f'Правка {title_text}'
-    chunks = Chunk.query.filter(Chunk.content_id == text.id).all()
+    chunks = Chunk.query.filter(
+        Chunk.content_id == text.id).order_by(Chunk.word_time).all()
     chunks_result = []
     count_list = []
     count = 0
@@ -97,7 +98,8 @@ def process_edit_text():
     text_id = request.args.get('id')
     text = Content.query.filter(Content.id == text_id).first()
     title_text = text.title_text
-    chunks = Chunk.query.filter(Chunk.content_id == text.id).all()
+    chunks = Chunk.query.filter(
+        Chunk.content_id == text.id).order_by(Chunk.word_time).all()
     edited_chunks = request.form.to_dict(flat=False)['chunk_recognized']
     form = EditForm()
     recognizer = Recognizer(title_text)

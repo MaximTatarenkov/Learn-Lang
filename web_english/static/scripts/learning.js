@@ -7,6 +7,8 @@ $(document).ready(function () {
     dataId = $("#text_en").attr("data-id"),
     url = "send_chunks/" + dataId,
     pointsTime = [0],
+    translationMarkup,
+    markupInSentance,
     sentencesEnArray,
     sentencesRuArray,
     sentenceEn = "",
@@ -14,6 +16,7 @@ $(document).ready(function () {
     pointInChunk,
     pointInText,
     punctuation,
+    wordId,
     canvas = document.createElement("canvas"),
     ctx = canvas.getContext("2d"),
     length_sentence;
@@ -58,6 +61,7 @@ $(document).ready(function () {
           }
         }
       }
+      translationMarkup = result.translation_markup;
       sentencesEnArray = result.sentences_en;
       sentencesRuArray = result.sentences_ru;
       audio.currentTime = 0;
@@ -84,7 +88,6 @@ $(document).ready(function () {
     $(audio).bind("timeupdate", function () {
       second = parseFloat(audio.currentTime);
       let chunksLength = $(".chunk").length,
-        item,
         i,
         n;
       for (i = 0; i < chunksLength; i++) {
@@ -104,6 +107,7 @@ $(document).ready(function () {
   })();
 
   addClasses = function (count) {
+    let item;
     item = document.querySelector(`#a${count}`);
     if (pause || stopPlay || $(`#a${count}`).hasClass("active")) {
       return;
@@ -117,18 +121,34 @@ $(document).ready(function () {
     if ($("#text-sentence-en").attr("class") !== `sentenceEn${count}`) {
       sentenceEn = "";
       sentenceRu = "";
+      markupInSentance = translationMarkup.filter(
+        (markup) => markup.sentence == count
+      );
+
       for (let se = 0; se < sentencesEnArray[count].length; se++) {
         if (sentenceEn) {
-          sentenceEn += `<span id=\"word${se}\" class=\"wordsEn\"> ${sentencesEnArray[count][se]}</span>`;
+          sentenceEn += `<span id=\"word${se}\" class=\"word-en\"> ${sentencesEnArray[count][se]}</span>`;
         } else {
-          sentenceEn = `<span id=\"word${se}\" class=\"wordsEn\">${sentencesEnArray[count][se]}</span>`;
+          sentenceEn = `<span id=\"word${se}\" class=\"word-en\">${sentencesEnArray[count][se]}</span>`;
         }
       }
+      let translation;
       for (let sr = 0; sr < sentencesRuArray[count].length; sr++) {
+        translation = markupInSentance.find(
+          (translation) => translation.in_ru == sr
+        );
         if (sentenceRu) {
-          sentenceRu += `<span id=\"word${sr}\" class=\"wordsRu\"> ${sentencesRuArray[count][sr]}</span>`;
+          if (translation) {
+            sentenceRu += `<span id=\"word${translation.in_en}\" class=\"word-ru\"> ${sentencesRuArray[count][sr]}</span>`;
+          } else {
+            sentenceRu += `<span class=\"word-ru\"> ${sentencesRuArray[count][sr]}</span>`;
+          }
         } else {
-          sentenceRu = `<span id=\"word${sr}\" class=\"wordsRu\">${sentencesRuArray[count][sr]}</span>`;
+          if (translation) {
+            sentenceRu = `<span id=\"word${translation.in_en}\" class=\"word-ru\">${sentencesRuArray[count][sr]}</span>`;
+          } else {
+            sentenceRu = `<span class=\"word-ru\">${sentencesRuArray[count][sr]}</span>`;
+          }
         }
       }
       $("#text-sentence-en").replaceWith(
@@ -137,38 +157,17 @@ $(document).ready(function () {
       $("#text-sentence-ru").replaceWith(
         `<span id=\"text-sentence-ru\" class=\"sentenceRu${count}\">${sentenceRu}</span>`
       );
+
+      $(".word-ru").hover(function () {
+        wordId = $(this).attr("id");
+        $(`#${wordId}.word-en`).toggleClass("markup");
+      });
+      $(".word-en").hover(function () {
+        wordId = $(this).attr("id");
+        $(`#${wordId}.word-ru`).toggleClass("markup");
+      });
     }
   };
-
-  // addSentences = function (count) {
-  //   if ($("#text-sentence-en").attr("class") !== `sentenceEn${count}`) {
-  //     sentenceEn = "";
-  //     for (let se = 0; se < sentencesEnArray[count].length; se++) {
-  //       if (sentenceEn) {
-  //         sentenceEn += `<span id=\"word${se}\" class=\"wordsEn\"> ${sentencesEnArray[count][se]}</span>`;
-  //       } else {
-  //         sentenceEn = `<span id=\"word${se}\" class=\"wordsEn\">${sentencesEnArray[count][se]}</span>`;
-  //       }
-  //     }
-  //     $("#text-sentence-en").replaceWith(
-  //       `<span id=\"text-sentence-en\" class=\"sentenceEn${count}\">${sentenceEn}</span>`
-  //     );
-  //   }
-
-  //   if ($("#text-sentence-ru").attr("class") !== `sentenceRu${count}`) {
-  //     sentenceRu = "";
-  //     for (let sr = 0; sr < sentencesRuArray[count].length; sr++) {
-  //       if (sentenceRu) {
-  //         sentenceRu += `<span id=\"word${sr}\" class=\"wordsRu\"> ${sentencesRuArray[count][sr]}</span>`;
-  //       } else {
-  //         sentenceRu = `<span id=\"word${sr}\" class=\"wordsRu\">${sentencesRuArray[count][sr]}</span>`;
-  //       }
-  //     }
-  //     $("#text-sentence-ru").replaceWith(
-  //       `<span id=\"text-sentence-ru\" class=\"sentenceRu${count}\">${sentenceRu}</span>`
-  //     );
-  //   }
-  // };
 
   // Play
   playFromBeginning = function () {

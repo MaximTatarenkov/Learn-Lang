@@ -100,7 +100,7 @@ class Recognizer():
         headers = {"Authorization": f"Api-Key {Config.API_KEY}"}
         response = requests.post(
             url, params=params, data=data, headers=headers)
-        # print(response.json())
+        print(response.json())
         chunk = response.json()
         if chunk.get("error_code") is None:
             return chunk.get("result")
@@ -136,16 +136,8 @@ class Recognizer():
                         change_chunk_result = change_chunk_result.replace(
                             chunk_word, word, 1)
                         break
-                        # if fuzzy < 100:
-                        #     change_chunk_result = change_chunk_result.replace(chunk_word, word, 1)
-                        #     print('111')
-                    # print(fuzzy[1])
-                    # print(change_chunk_result)
             else:
                 break
-            # if word in split_chunk_result:
-            #     medium_word = word
-            #     split_chunk_result.remove(word)
         if medium_word is None:
             chunk_maping = [chunk_result, content.id, '', word_number]
             return chunk_maping, chunk_text
@@ -169,7 +161,6 @@ class Recognizer():
                 word_number = number_word_segment_split_text + word_number + 1
             else:
                 word_number = number_word_segment_split_text + word_number
-        # chunk_maping = [chunk_result, content.id, medium_word, word_number]
         chunk_maping = [change_chunk_result,
                         content.id, medium_word, word_number]
         return chunk_maping, chunk_text
@@ -178,12 +169,14 @@ class Recognizer():
         chunks_text = []
         words_number = [0]
         count = 0
-        chunks = Chunk.query.filter(Chunk.content_id == text_id).all()
+        chunks = Chunk.query.filter(
+            Chunk.content_id == text_id).order_by(Chunk.word_time).all()
         for chunk in chunks:
             word_number = chunk.word_number
             words_number.append(word_number)
         for chunk_result in chunks_result:
-            chunk_text = self.maping_text(chunk_result, words_number[count])[1]
+            chunk_text = self.maping_text(
+                chunk_result, words_number[count])[1]
             chunks_text.append(chunk_text)
             count += 1
         return chunks_text

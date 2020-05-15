@@ -38,6 +38,117 @@
   width: 100%;
   transition: initial;
 }
+/* .word-en {
+  padding: 3px;
+} */
+.word-en:hover {
+  background: #1c6c7a;
+  color: #fff;
+  cursor: pointer;
+}
+/* .word-ru {
+  padding: 3px;
+} */
+.word-ru:hover {
+  background: #1c6c7a;
+  color: #fff;
+  cursor: pointer;
+}
+.markup {
+  background: #1c6c7a;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* #word0 {
+  padding: 3px;
+}
+#word0:hover + #word0 {
+  background: #1c6c7a;
+  color: #fff;
+  cursor: pointer;
+}
+#word1 {
+  padding: 3px;
+}
+#word1:hover + #word1 {
+  background: #1c6c7a;
+  color: #fff;
+  cursor: pointer;
+}
+#word2 {
+  padding: 3px;
+}
+#word2:hover + #word2 {
+  background: #1c6c7a;
+  color: #fff;
+  cursor: pointer;
+}
+#word3 {
+  padding: 3px;
+}
+#word3:hover {
+  background: #1c6c7a;
+  color: #fff;
+  cursor: pointer;
+}
+#word4 {
+  padding: 3px;
+}
+#word4:hover {
+  background: #1c6c7a;
+  color: #fff;
+  cursor: pointer;
+}
+#word5 {
+  padding: 3px;
+}
+#word5:hover {
+  background: #1c6c7a;
+  color: #fff;
+  cursor: pointer;
+}
+#word6 {
+  padding: 3px;
+}
+#word6:hover {
+  background: #1c6c7a;
+  color: #fff;
+  cursor: pointer;
+}
+#word7 {
+  padding: 3px;
+}
+#word7:hover {
+  background: #1c6c7a;
+  color: #fff;
+  cursor: pointer;
+}
+#word8 {
+  padding: 3px;
+}
+#word8:hover {
+  background: #1c6c7a;
+  color: #fff;
+  cursor: pointer;
+}
+#word9 {
+  padding: 3px;
+}
+#word9:hover {
+  background: #1c6c7a;
+  color: #fff;
+  cursor: pointer;
+}
+#word10 {
+  padding: 3px;
+}
+#word10:hover {
+  background: #1c6c7a;
+  color: #fff;
+  cursor: pointer;
+} */
+
 /* #tracker {
 position: relative;
 width: 100%;
