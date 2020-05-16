@@ -5,17 +5,14 @@ $(document).ready(function () {
     stopPlay = true,
     second = 0,
     dataId = $("#text_en").attr("data-id"),
-    url = "send_chunks/" + dataId,
-    pointsTime = [0],
+    url = "send_excerpts/" + dataId,
+    punctuationsTime,
     translationMarkup,
     markupInSentance,
     sentencesEnArray,
     sentencesRuArray,
     sentenceEn = "",
     sentenceRu = "",
-    pointInChunk,
-    pointInText,
-    punctuation,
     wordId,
     canvas = document.createElement("canvas"),
     ctx = canvas.getContext("2d"),
@@ -23,7 +20,8 @@ $(document).ready(function () {
   ctx.font = "19px Times New Roman serif";
   // currentBack,
   // currentForvard;
-  const INTERVAL = 2;
+  const INTERVAL = 2,
+    CONTEINERWIDTH = 830;
 
   // Формируем главный текст, ищем в чанках знаки пунктуации и по ним создаем массив для дальнейшего использования при выводе предложений
   (function (url) {
@@ -32,8 +30,7 @@ $(document).ready(function () {
       for (let i = 0; i < result.chunks_for_sending.length; i++) {
         chunk = result.chunks_for_sending[i];
         length_sentence += ctx.measureText(chunk).width;
-        // Ширина контейнера 900 => длина предложения должна быть не больше примерно 830
-        if (length_sentence > 830) {
+        if (length_sentence > CONTEINERWIDTH) {
           text_en.insertAdjacentHTML(
             "beforeend",
             `<br><span id=\"a${i}\" class=\"chunk active-remove\">${chunk}</span>`
@@ -46,42 +43,14 @@ $(document).ready(function () {
             `<span id=\"a${i}\" class=\"chunk active-remove\">${chunk}</span>`
           );
         }
-
-        if (
-          chunk.indexOf(".") != -1 ||
-          chunk.indexOf("!") != -1 ||
-          chunk.indexOf("?") != -1 ||
-          chunk.indexOf(";") != -1
-        ) {
-          punctuation = punctuationIndexes(chunk);
-          for (let p of punctuation) {
-            pointInChunk = (INTERVAL / chunk.length) * p;
-            pointInText = INTERVAL * i + pointInChunk;
-            pointsTime.push(pointInText);
-          }
-        }
       }
+      punctuationsTime = result.punctuations_time;
       translationMarkup = result.translation_markup;
       sentencesEnArray = result.sentences_en;
       sentencesRuArray = result.sentences_ru;
       audio.currentTime = 0;
     });
   })(url);
-
-  // Вспомогательная функция для формирования массива с индексами знаков пунктуации
-  function punctuationIndexes(chunk) {
-    let punctuationIndexes = [];
-    let searchElement = [".", "!", "?", ";"];
-    let index;
-    for (let i of searchElement) {
-      index = chunk.indexOf(i);
-      while (index != -1) {
-        punctuationIndexes.push(index);
-        index = chunk.indexOf(i, index + 1);
-      }
-    }
-    return punctuationIndexes;
-  }
 
   // Привязка подчеркивания и вывода предложений к воспроизведению аудиофайла
   (function () {
@@ -97,8 +66,8 @@ $(document).ready(function () {
       }
       addClasses(i);
 
-      for (n = 0; n < pointsTime.length; n++) {
-        if (pointsTime[n] <= second && second < pointsTime[n + 1]) {
+      for (n = 0; n < punctuationsTime.length; n++) {
+        if (punctuationsTime[n] <= second && second < punctuationsTime[n + 1]) {
           break;
         }
       }

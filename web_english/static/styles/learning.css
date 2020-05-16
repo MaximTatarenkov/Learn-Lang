@@ -38,17 +38,11 @@
   width: 100%;
   transition: initial;
 }
-/* .word-en {
-  padding: 3px;
-} */
 .word-en:hover {
   background: #1c6c7a;
   color: #fff;
   cursor: pointer;
 }
-/* .word-ru {
-  padding: 3px;
-} */
 .word-ru:hover {
   background: #1c6c7a;
   color: #fff;
@@ -60,95 +54,46 @@
   cursor: pointer;
 }
 
-/* #word0 {
-  padding: 3px;
+.chunk.active02:before {
+  transition: width 0.2s linear;
+  width: 100%;
 }
-#word0:hover + #word0 {
-  background: #1c6c7a;
-  color: #fff;
-  cursor: pointer;
+.chunk.active04:before {
+  transition: width 0.4s linear;
+  width: 100%;
 }
-#word1 {
-  padding: 3px;
+.chunk.active06:before {
+  transition: width 0.6s linear;
+  width: 100%;
 }
-#word1:hover + #word1 {
-  background: #1c6c7a;
-  color: #fff;
-  cursor: pointer;
+.chunk.active08:before {
+  transition: width 0.8s linear;
+  width: 100%;
 }
-#word2 {
-  padding: 3px;
+.chunk.active10:before {
+  transition: width 1s linear;
+  width: 100%;
 }
-#word2:hover + #word2 {
-  background: #1c6c7a;
-  color: #fff;
-  cursor: pointer;
+.chunk.active12:before {
+  transition: width 1.2s linear;
+  width: 100%;
 }
-#word3 {
-  padding: 3px;
+.chunk.active14:before {
+  transition: width 1.4s linear;
+  width: 100%;
 }
-#word3:hover {
-  background: #1c6c7a;
-  color: #fff;
-  cursor: pointer;
+.chunk.active16:before {
+  transition: width 1.6s linear;
+  width: 100%;
 }
-#word4 {
-  padding: 3px;
+.chunk.active18:before {
+  transition: width 1.8s linear;
+  width: 100%;
 }
-#word4:hover {
-  background: #1c6c7a;
-  color: #fff;
-  cursor: pointer;
+.chunk.active20:before {
+  transition: width 2s linear;
+  width: 100%;
 }
-#word5 {
-  padding: 3px;
-}
-#word5:hover {
-  background: #1c6c7a;
-  color: #fff;
-  cursor: pointer;
-}
-#word6 {
-  padding: 3px;
-}
-#word6:hover {
-  background: #1c6c7a;
-  color: #fff;
-  cursor: pointer;
-}
-#word7 {
-  padding: 3px;
-}
-#word7:hover {
-  background: #1c6c7a;
-  color: #fff;
-  cursor: pointer;
-}
-#word8 {
-  padding: 3px;
-}
-#word8:hover {
-  background: #1c6c7a;
-  color: #fff;
-  cursor: pointer;
-}
-#word9 {
-  padding: 3px;
-}
-#word9:hover {
-  background: #1c6c7a;
-  color: #fff;
-  cursor: pointer;
-}
-#word10 {
-  padding: 3px;
-}
-#word10:hover {
-  background: #1c6c7a;
-  color: #fff;
-  cursor: pointer;
-} */
-
 /* #tracker {
 position: relative;
 width: 100%;

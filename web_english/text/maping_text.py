@@ -13,11 +13,10 @@ from web_english.models import Chunk, Content
 
 @celery.task
 def recognition_start(title):
-    text = Content.query.filter(Content.title_text == title).first()
-    text.status = Content.PROCESSING
-    db.session.add(text)
+    content = Content.query.filter(Content.title_text == title).first()
+    content.status = Content.PROCESSING
+    db.session.add(content)
     db.session.commit()
-    # Та самая секунда, на которой находится диктор
     current_second = 0
     chunk_maping = ['', 0, '', 0]
     recognizer = Recognizer(title)
@@ -29,12 +28,12 @@ def recognition_start(title):
                 chunk_result, chunk_maping[3])[0]
             current_second += Config.INTERVAL
             recognizer.save_chunk(chunk_maping, current_second)
-        text.status = Content.DONE
-        db.session.add(text)
+        content.status = Content.DONE
+        db.session.add(content)
         db.session.commit()
     except Exception:
-        text.status = Content.ERROR
-        db.session.add(text)
+        content.status = Content.ERROR
+        db.session.add(content)
         db.session.commit()
         raise
 
@@ -112,50 +111,39 @@ class Recognizer():
         medium_word = None
         chunk_result = chunk_result.lower()
         change_chunk_result = chunk_result
-        # Убираем из текста все знаки препинания и разбиваем по словам
         split_text = re.sub(r"[.,!?;:]", r"", content.text_en).lower().split()
-        # 15  - это примерное кол-во слов, которое диктор может произнести за 3 секунды
+        excerpt_length_in_words = 15
         if word_number == 0:
-            segment_split_text = split_text[word_number: word_number + 15]
+            segment_split_text = split_text[word_number: word_number +
+                                            excerpt_length_in_words]
         else:
-            segment_split_text = split_text[word_number + 1: word_number + 15]
+            segment_split_text = split_text[word_number +
+                                            1: word_number + excerpt_length_in_words]
         chunk_text = ' '.join(segment_split_text)
-        # Разбиваем распознанный отрывок на слова и приводим к нижнему регистру
         split_chunk_result = chunk_result.split()
-        # Перебираем каждое слово в оригинальном отрезке
-        for word in segment_split_text:
-            if split_chunk_result:
-                # Если находим это слово в распознанном, то записываем его как последнее найденное слово
-                # и удаляем первое это слово из распознанного отрывка, чтобы больше не встречалось
+        acceptable_similarity = 70
+        if split_chunk_result:
+            for word in segment_split_text:
                 for chunk_word in split_chunk_result:
                     fuzzy = fuzz.ratio(word, chunk_word)
-                    if fuzzy > 70:
+                    if fuzzy > acceptable_similarity:
                         medium_word = word
                         index_word = split_chunk_result.index(chunk_word)
                         split_chunk_result = split_chunk_result[index_word + 1:]
                         change_chunk_result = change_chunk_result.replace(
                             chunk_word, word, 1)
                         break
-            else:
-                break
         if medium_word is None:
             chunk_maping = [chunk_result, content.id, '', word_number]
             return chunk_maping, chunk_text
-        # Кол-во одинаковых "последних" слов в распознанном отрезке. Отнимаем 1, чтобы можно было
-        # использовать его в списке повторяющихся слов в оригинальном отрезке
         number_duplicate = chunk_result.lower().split().count(medium_word) - 1
-        # Если это кол-во равно 1 (не забываем, что отняли 1 выше), то прибавляем к
-        # индексу найденного последнего слова индекс предыдущего во всем тексте - это
-        # будет индекс нашего найденного последнего слова
         if number_duplicate == 0:
             if word_number != 0:
                 word_number += segment_split_text.index(medium_word) + 1
             else:
                 word_number += segment_split_text.index(medium_word)
-        # Иначе ищем индекс последнего слова, которое было по порядку на том месте,
-        # сколько встречалось в распознанном тексте
         else:
-            number_word_segment_split_text = duplicate_word(
+            number_word_segment_split_text = self.duplicate_word(
                 segment_split_text, medium_word, number_duplicate)
             if word_number != 0:
                 word_number = number_word_segment_split_text + word_number + 1
@@ -207,22 +195,62 @@ class Recognizer():
         db.session.add(chunk)
         db.session.commit()
 
+    def compose_excerpts_for_sending(self, text_id):
+        content = Content.query.filter(Content.id == text_id).first()
+        chunks = Chunk.query.filter(
+            Chunk.content_id == text_id).order_by(Chunk.word_time).all()
+        split_text = content.text_en.split()
+        word_number_start = 0
+        word_number_end = 0
+        excerpts_for_sending = []
+        for chunk in chunks:
+            word_number_start = word_number_end
+            word_number_end = chunk.word_number + 1
+            split_excerpt = split_text[word_number_start:word_number_end]
+            join_excerpt = " ".join(split_excerpt)
+            excerpts_for_sending.append(join_excerpt)
+        return excerpts_for_sending
 
-def duplicate_word(segment_split_text, medium_word, number_duplicate):
-    start_at = -1
-    duplicates = []
-    while True:
-        try:
-            duplicate = segment_split_text.index(medium_word, start_at + 1)
-        except ValueError:
-            break
-        duplicates.append(duplicate)
-        start_at = duplicate
-    if number_duplicate <= len(duplicates) - 1:
-        result = duplicates[number_duplicate]
-    else:
-        result = duplicates[-1]
-    return result
+    def find_punctuations_time(self, excerpts):
+        punctuations_time = [0]
+        count = 0
+        for excerpt in excerpts:
+            if excerpt.find('.') != -1 or excerpt.find('!') != -1 or excerpt.find('?') != -1 or excerpt.find(';') != -1:
+                punctuation_indexes = self.search_punctuation_indexes(excerpt)
+                for punct_index in punctuation_indexes:
+                    interval_in_sec = Config.INTERVAL/1000
+                    punctuation_in_excerpt = (
+                        interval_in_sec / len(excerpt)) * punct_index
+                    punctuation_in_text = interval_in_sec * count + punctuation_in_excerpt
+                    punctuations_time.append(punctuation_in_text)
+            count += 1
+        return punctuations_time
+
+    def search_punctuation_indexes(self, excerpt):
+        punctuation_indexes = []
+        element_search = [".", "!", "?", ";"]
+        for p in element_search:
+            index = excerpt.find(p)
+            while index != -1:
+                punctuation_indexes.append(index)
+                index = excerpt.find(p, index + 1)
+        return punctuation_indexes
+
+    def duplicate_word(self, segment_split_text, medium_word, number_duplicate):
+        start_at = -1
+        duplicates = []
+        while True:
+            try:
+                duplicate = segment_split_text.index(medium_word, start_at + 1)
+            except ValueError:
+                break
+            duplicates.append(duplicate)
+            start_at = duplicate
+        if number_duplicate <= len(duplicates) - 1:
+            result = duplicates[number_duplicate]
+        else:
+            result = duplicates[-1]
+        return result
 
 
 def create_name(title):

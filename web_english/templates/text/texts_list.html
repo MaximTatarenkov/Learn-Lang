@@ -2,21 +2,21 @@
 <h1><p>{{ title }}</p></h1>
 <h4>
   <ol>
-    {% for text in texts | reverse %}
-    <li id="{{ text.id }}" class="list-text" data-id="{{ text.id }}">
-      {% if not text.is_ready %}
-      <div class="upload-text{{ text.id }}">
-        <a href="{{ url_for('text.edit_text', text_id=text.id) }}"
-          >{{ text.title_text }}</a
+    {% for content in contents | reverse %}
+    <li id="{{ content.id }}" class="list-text" data-id="{{ content.id }}">
+      {% if not content.is_ready %}
+      <div class="upload-text{{ content.id }}">
+        <a href="{{ url_for('text.edit_text', text_id=content.id) }}"
+          >{{ content.title_text }}</a
         >
-        <div class="progress {{ text.id }}">
-          <div class="progress-bar {{ text.id }}" style="width: 0%;">0%</div>
+        <div class="progress {{ content.id }}">
+          <div class="progress-bar {{ content.id }}" style="width: 0%;">0%</div>
         </div>
       </div>
       {% else %}
-      <a href="{{ url_for('text.edit_text', text_id=text.id) }}"
-        >{{ text.title_text }}</a
-        >
+      <a href="{{ url_for('text.edit_text', text_id=content.id) }}"
+        >{{ content.title_text }}</a
+      >
       {% endif %}
     </li>
     {% endfor %}

@@ -11,8 +11,8 @@ from web_english.models import Word, Translation, Content
 @celery.task
 def translation_start(title_text):
     content = Content.query.filter_by(title_text=title_text).first()
-    text = content.text_en
-    split_text = split_clean_text(text)
+    text_en = content.text_en
+    split_text = split_clean_text(text_en)
     for word in split_text:
         check_database = Word.query.filter_by(word=word).first()
         if not check_database:
@@ -58,9 +58,9 @@ def translation_word(word):
 
 
 def translation_in_context(text_id):
-    text = Content.query.get(text_id)
-    english_sentences = re.split(r'[.!?;]', text.text_en)
-    russian_sentences = re.split(r'[.!?;]', text.text_ru)
+    content = Content.query.get(text_id)
+    english_sentences = re.split(r'[.!?;]', content.text_en)
+    russian_sentences = re.split(r'[.!?;]', content.text_ru)
     count_sentence = 0
     count_word_in_en_sentence = 0
     for en_sentence in english_sentences:
