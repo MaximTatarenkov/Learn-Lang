@@ -27,20 +27,20 @@ $(document).ready(function () {
   (function (url) {
     $.getJSON(url, function (result) {
       length_sentence = 0;
-      for (let i = 0; i < result.chunks_for_sending.length; i++) {
-        chunk = result.chunks_for_sending[i];
-        length_sentence += ctx.measureText(chunk).width;
+      for (let i = 0; i < result.excerpts_for_sending.length; i++) {
+        excerpt = result.excerpts_for_sending[i];
+        length_sentence += ctx.measureText(excerpt).width;
         if (length_sentence > CONTEINERWIDTH) {
           text_en.insertAdjacentHTML(
             "beforeend",
-            `<br><span id=\"a${i}\" class=\"chunk active-remove\">${chunk}</span>`
+            `<br><span id=\"a${i}\" class=\"excerpt active-remove\">${excerpt}</span>`
           );
-          length_sentence = ctx.measureText(chunk).width;
+          length_sentence = ctx.measureText(excerpt).width;
         } else {
-          chunk = " " + chunk;
+          excerpt = " " + excerpt;
           text_en.insertAdjacentHTML(
             "beforeend",
-            `<span id=\"a${i}\" class=\"chunk active-remove\">${chunk}</span>`
+            `<span id=\"a${i}\" class=\"excerpt active-remove\">${excerpt}</span>`
           );
         }
       }
@@ -56,7 +56,7 @@ $(document).ready(function () {
   (function () {
     $(audio).bind("timeupdate", function () {
       second = parseFloat(audio.currentTime);
-      let chunksLength = $(".chunk").length,
+      let chunksLength = $(".excerpt").length,
         i,
         n;
       for (i = 0; i < chunksLength; i++) {
@@ -177,8 +177,8 @@ $(document).ready(function () {
     audio.pause();
     currentBack = audio.currentTime - (audio.currentTime % INTERVAL);
     audio.currentTime = currentBack;
-    $(".chunk.active:last").addClass("active-remove");
-    $(".chunk.active:last").removeClass("active");
+    $(".excerpt.active:last").addClass("active-remove");
+    $(".excerpt.active:last").removeClass("active");
     return;
   };
 
@@ -201,9 +201,9 @@ $(document).ready(function () {
     pause = false;
     audio.pause();
     audio.currentTime = 0;
-    $(".chunk").removeClass("active");
-    $(".chunk").removeClass("active-fast");
-    $(".chunk").addClass("active-remove");
+    $(".excerpt").removeClass("active");
+    $(".excerpt").removeClass("active-fast");
+    $(".excerpt").addClass("active-remove");
     return;
   };
 
@@ -258,11 +258,11 @@ $(document).ready(function () {
 //   } else if (pause) {
 //     audio.currentTime -= INTERVAL;
 //     if ($(".active-remove:first").prev(".active")) {
-//       $(".chunk.active:last").addClass("active-remove");
-//       $(".chunk.active:last").removeClass("active");
+//       $(".excerpt.active:last").addClass("active-remove");
+//       $(".excerpt.active:last").removeClass("active");
 //     } else {
-//       $(".chunk.active-fast:last").addClass("active-remove");
-//       $(".chunk.active-fast:last").removeClass("active-fast");
+//       $(".excerpt.active-fast:last").addClass("active-remove");
+//       $(".excerpt.active-fast:last").removeClass("active-fast");
 //     }
 //   } else {
 //     set_pause();
@@ -276,19 +276,19 @@ $(document).ready(function () {
 //     pause = true;
 //     audio.currentTime += INTERVAL;
 //     // $(".active-remove:first").addClass("active-fast") ||
-//     $(".chunk.active-remove:first").addClass("active-fast");
+//     $(".excerpt.active-remove:first").addClass("active-fast");
 //     $(".active-remove:first").removeClass("active-remove");
 //   } else if (pause) {
 //     audio.currentTime += INTERVAL;
-//     // if ($(".chunk").hasClass("active-remove")) {
-//     $(".chunk.active-remove:first").addClass("active-fast");
+//     // if ($(".excerpt").hasClass("active-remove")) {
+//     $(".excerpt.active-remove:first").addClass("active-fast");
 //     $(".active-remove:first").removeClass("active-remove");
 //     // } else {
-//     //   $(".chunk:first").addClass("active-fast");
+//     //   $(".excerpt:first").addClass("active-fast");
 //     // };
 //   } else {
-//     $(".chunk.active:last").addClass("active-fast");
-//     $(".chunk.active:last").removeClass("active");
+//     $(".excerpt.active:last").addClass("active-fast");
+//     $(".excerpt.active:last").removeClass("active");
 //     currentForvard = INTERVAL - (audio.currentTime % INTERVAL);
 //     audio.currentTime += currentForvard;
 //     // $(".active-remove:first").prev(".active").addClass("active-fast");

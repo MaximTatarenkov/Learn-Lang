@@ -12,12 +12,12 @@
 #text-sentence-ru {
   font-size: 25px;
 }
-.chunk {
+.excerpt {
   font-size: 19px;
   font-family: "Times New Roman", Times, serif;
   position: relative;
 }
-.chunk:before {
+.excerpt:before {
   position: absolute;
   height: 1px;
   width: 0%;
@@ -26,15 +26,15 @@
   content: "";
   bottom: -1px;
 }
-.chunk.active:before {
+.excerpt.active:before {
   transition: width 2s linear;
   width: 100%;
 }
-.chunk.active-remove:before {
+.excerpt.active-remove:before {
   width: 0%;
   transition: initial;
 }
-.chunk.active-fast:before {
+.excerpt.active-fast:before {
   width: 100%;
   transition: initial;
 }
@@ -54,43 +54,43 @@
   cursor: pointer;
 }
 
-.chunk.active02:before {
+.excerpt.active02:before {
   transition: width 0.2s linear;
   width: 100%;
 }
-.chunk.active04:before {
+.excerpt.active04:before {
   transition: width 0.4s linear;
   width: 100%;
 }
-.chunk.active06:before {
+.excerpt.active06:before {
   transition: width 0.6s linear;
   width: 100%;
 }
-.chunk.active08:before {
+.excerpt.active08:before {
   transition: width 0.8s linear;
   width: 100%;
 }
-.chunk.active10:before {
+.excerpt.active10:before {
   transition: width 1s linear;
   width: 100%;
 }
-.chunk.active12:before {
+.excerpt.active12:before {
   transition: width 1.2s linear;
   width: 100%;
 }
-.chunk.active14:before {
+.excerpt.active14:before {
   transition: width 1.4s linear;
   width: 100%;
 }
-.chunk.active16:before {
+.excerpt.active16:before {
   transition: width 1.6s linear;
   width: 100%;
 }
-.chunk.active18:before {
+.excerpt.active18:before {
   transition: width 1.8s linear;
   width: 100%;
 }
-.chunk.active20:before {
+.excerpt.active20:before {
   transition: width 2s linear;
   width: 100%;
 }

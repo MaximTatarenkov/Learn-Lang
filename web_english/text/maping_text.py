@@ -8,7 +8,7 @@ import requests
 
 from config import Config
 from web_english import db, celery
-from web_english.models import Chunk, Content
+from web_english.models import Chunk, Content, Translation
 
 
 @celery.task
@@ -195,6 +195,22 @@ class Recognizer():
         db.session.add(chunk)
         db.session.commit()
 
+    def duplicate_word(self, segment_split_text, medium_word, number_duplicate):
+        start_at = -1
+        duplicates = []
+        while True:
+            try:
+                duplicate = segment_split_text.index(medium_word, start_at + 1)
+            except ValueError:
+                break
+            duplicates.append(duplicate)
+            start_at = duplicate
+        if number_duplicate <= len(duplicates) - 1:
+            result = duplicates[number_duplicate]
+        else:
+            result = duplicates[-1]
+        return result
+
     def compose_excerpts_for_sending(self, text_id):
         content = Content.query.filter(Content.id == text_id).first()
         chunks = Chunk.query.filter(
@@ -202,14 +218,14 @@ class Recognizer():
         split_text = content.text_en.split()
         word_number_start = 0
         word_number_end = 0
-        excerpts_for_sending = []
+        excerpts = []
         for chunk in chunks:
             word_number_start = word_number_end
             word_number_end = chunk.word_number + 1
             split_excerpt = split_text[word_number_start:word_number_end]
             join_excerpt = " ".join(split_excerpt)
-            excerpts_for_sending.append(join_excerpt)
-        return excerpts_for_sending
+            excerpts.append(join_excerpt)
+        return excerpts
 
     def find_punctuations_time(self, excerpts):
         punctuations_time = [0]
@@ -236,21 +252,118 @@ class Recognizer():
                 index = excerpt.find(p, index + 1)
         return punctuation_indexes
 
-    def duplicate_word(self, segment_split_text, medium_word, number_duplicate):
-        start_at = -1
-        duplicates = []
-        while True:
-            try:
-                duplicate = segment_split_text.index(medium_word, start_at + 1)
-            except ValueError:
-                break
-            duplicates.append(duplicate)
-            start_at = duplicate
-        if number_duplicate <= len(duplicates) - 1:
-            result = duplicates[number_duplicate]
+    def compose_translation_markup(self, text_id):
+        markups = Translation.query.filter_by(text_id=text_id).all()
+        translation_markup = []
+        for markup in markups:
+            translation_markup.append({"sentence": markup.sentence,
+                                       "in_en": markup.in_en_sentence,
+                                       "in_ru": markup.in_ru_sentence})
+        return translation_markup
+
+    def split_text_by_sentences(self, text):
+        punctuation = [".", "!", "?", ";"]
+        for i in punctuation:
+            changed_text = text.replace(i, f"{i}|")
+            text = changed_text
+        split_text_by_sentences = text.split("| ")
+        for id, item in enumerate(split_text_by_sentences):
+            split_text_by_sentences[id] = item.replace("|", "").split()
+        return split_text_by_sentences
+
+    def compose_sentences_for_visualization(self, excerpts):
+        normal_duration = 2.0
+        count = 0
+        sentences_composed = [
+            {f"sentence{count}": {"durations": [], "text": []}}]
+        for excerpt in excerpts:
+            if excerpt.find('.') != -1 or excerpt.find('!') != -1 or excerpt.find('?') != -1 or excerpt.find(';') != -1:
+                punctuation_indexes = self.search_punctuation_indexes(excerpt)
+                durations_of_mini_excerpts = self.divide_excerpts_in_time(
+                    punctuation_indexes, excerpt)
+                excerpt_changed = self.split_text_by_sentences(excerpt)
+                mini_count = 0
+                for mini_excerpt in excerpt_changed:
+                    if len(excerpt_changed) == 1:
+                        sentences_composed[count][f"sentence{count}"]["durations"].append(
+                            durations_of_mini_excerpts[mini_count])
+                        sentences_composed[count][f"sentence{count}"]["text"].append(
+                            mini_excerpt)
+                        count += 1
+                        sentences_composed.append(
+                            {f"sentence{count}": {"durations": [], "text": []}})
+                    elif mini_count == 0:
+                        sentences_composed[count][f"sentence{count}"]["durations"].append(
+                            durations_of_mini_excerpts[mini_count])
+                        sentences_composed[count][f"sentence{count}"]["text"].append(
+                            mini_excerpt)
+                        mini_count += 1
+                        count += 1
+                    elif 0 < mini_count < len(excerpt_changed) - 1:
+                        sentences_composed.append(
+                            {f"sentence{count}": {"durations": [], "text": []}})
+                        sentences_composed[count][f"sentence{count}"]["durations"].append(
+                            durations_of_mini_excerpts[mini_count])
+                        sentences_composed[count][f"sentence{count}"]["text"].append(
+                            mini_excerpt)
+                        mini_count += 1
+                        count += 1
+                    else:
+                        sentences_composed.append(
+                            {f"sentence{count}": {"durations": [], "text": []}})
+                        sentences_composed[count][f"sentence{count}"]["durations"].append(
+                            durations_of_mini_excerpts[mini_count])
+                        sentences_composed[count][f"sentence{count}"]["text"].append(
+                            mini_excerpt)
+            else:
+                sentences_composed[count][f"sentence{count}"]["durations"].append(
+                    normal_duration)
+                sentences_composed[count][f"sentence{count}"]["text"].append(
+                    excerpt.split())
+        for id, item in enumerate(sentences_composed):
+            if sentences_composed[id].get(f"sentence{id}") == {'durations': [], 'text': []}:
+                sentences_composed.remove(item)
+        return sentences_composed
+
+    def divide_excerpts_in_time(self, punctuation_indexes, excerpt):
+        durations_of_mini_excerpts = []
+        count = 1
+        interval_in_sec = Config.INTERVAL/1000
+        for punct_index in punctuation_indexes:
+            if len(punctuation_indexes) == 1 or count == len(punctuation_indexes):
+                punctuation_time_in_excerpt = self.count_duration_of_mini_excerpt(
+                    interval_in_sec, excerpt, punct_index)
+                duration = punctuation_time_in_excerpt - \
+                    sum(durations_of_mini_excerpts)
+                durations_of_mini_excerpts.append(round(duration, 1))
+                if (len(excerpt) - 1) != punct_index:
+                    durations_of_mini_excerpts.append(round(
+                        interval_in_sec - punctuation_time_in_excerpt, 1))
+            elif count == 1:
+                punctuation_time_in_excerpt = self.count_duration_of_mini_excerpt(
+                    interval_in_sec, excerpt, punct_index)
+                durations_of_mini_excerpts.append(punctuation_time_in_excerpt)
+                count += 1
+            else:
+                punctuation_time_in_excerpt = self.count_duration_of_mini_excerpt(
+                    interval_in_sec, excerpt, punct_index)
+                duration = punctuation_time_in_excerpt - \
+                    sum(durations_of_mini_excerpts)
+                durations_of_mini_excerpts.append(round(duration, 1))
+                count += 1
+        return durations_of_mini_excerpts
+
+    def count_duration_of_mini_excerpt(self, interval_in_sec, excerpt, punct_index):
+        time_update = 0.2
+        punctuation_time_in_excerpt = (
+            interval_in_sec / (len(excerpt) - 1)) * punct_index
+        remainder = punctuation_time_in_excerpt % time_update
+        if remainder >= 0.1:
+            punctuation_time_in_excerpt = punctuation_time_in_excerpt // time_update * \
+                time_update + time_update
         else:
-            result = duplicates[-1]
-        return result
+            punctuation_time_in_excerpt = punctuation_time_in_excerpt // time_update * time_update
+        return punctuation_time_in_excerpt
 
 
 def create_name(title):
