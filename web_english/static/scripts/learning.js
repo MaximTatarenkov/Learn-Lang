@@ -14,6 +14,7 @@ $(document).ready(function () {
     sentenceEn = "",
     sentenceRu = "",
     sentencesEnComposed,
+    sentenceInHTML,
     translation,
     wordId,
     canvas = document.createElement("canvas"),
@@ -89,37 +90,64 @@ $(document).ready(function () {
     }
   };
 
-  addWordInExcerpt = function (countSentences, countExcerpts) {
-    let excerptInSentence,
-      excerptInArray =
-        sentencesEnComposed[countSentences]["sentence"]["text"][countExcerpts];
-    excerptInArray.forEach((word, i) => {
-      if (excerptInSentence) {
-        excerptInSentence += `<span id=\"word${i}\" class=\"word-en\"> ${word}</span>`;
+  addWordInExcerpt = function (countSentences, countExcerpt, wordsCountBefore) {
+    let excerptInHTML,
+      inArray =
+        sentencesEnComposed[countSentences]["sentence"]["text"][countExcerpt];
+    inArray.forEach((word, i) => {
+      if (excerptInHTML) {
+        excerptInHTML += `<span id=\"word${
+          i + wordsCountBefore
+        }\" class=\"word-en\"> ${word}</span>`;
       } else {
-        excerptInSentence = `<span id=\"word${i}\" class=\"word-en\">${word}</span>`;
+        excerptInHTML = `<span id=\"word${
+          i + wordsCountBefore
+        }\" class=\"word-en\">${word}</span>`;
       }
     });
-    return excerptInSentence;
+    return excerptInHTML;
+  };
+
+  addExcerptInSentence = function (countSentences) {
+    let sentenceInHTML = "",
+      excerptInHTML,
+      wordsCountBefore,
+      inArray = sentencesEnComposed[countSentences]["sentence"]["text"];
+    inArray.forEach((excerpt, countExcerpt) => {
+      if (countExcerpt) {
+        wordsCountBefore = inArray[countExcerpt - 1].length;
+      } else {
+        wordsCountBefore = 0;
+      }
+      excerptInHTML = addWordInExcerpt(
+        countSentences,
+        countExcerpt,
+        wordsCountBefore
+      );
+      if (sentenceInHTML) {
+        sentenceInHTML += `<span id=\"excerpt-in-sentence${countExcerpt}\" class=\"excerpt\"> ${excerptInHTML}</span>`;
+      } else {
+        sentenceInHTML = `<span id=\"excerpt-in-sentence${countExcerpt}\" class=\"excerpt\">${excerptInHTML}</span>`;
+      }
+    });
+    return sentenceInHTML;
   };
 
   addSentences = function (count) {
     if ($("#text-sentence-en").attr("class") !== `sentenceEn${count}`) {
-      // console.log(sentencesEnComposed);
-      // console.log(sentencesEnArray);
-      addWordInExcerpt(1, 1);
       sentenceEn = "";
       sentenceRu = "";
+      sentenceInHTML = addExcerptInSentence(count);
       markupInSentance = translationMarkup.filter(
         (markup) => markup.sentence == count
       );
-      for (let se = 0; se < sentencesEnArray[count].length; se++) {
-        if (sentenceEn) {
-          sentenceEn += `<span id=\"word${se}\" class=\"word-en\"> ${sentencesEnArray[count][se]}</span>`;
-        } else {
-          sentenceEn = `<span id=\"word${se}\" class=\"word-en\">${sentencesEnArray[count][se]}</span>`;
-        }
-      }
+      // for (let se = 0; se < sentencesEnArray[count].length; se++) {
+      //   if (sentenceEn) {
+      //     sentenceEn += `<span id=\"word${se}\" class=\"word-en\"> ${sentencesEnArray[count][se]}</span>`;
+      //   } else {
+      //     sentenceEn = `<span id=\"word${se}\" class=\"word-en\">${sentencesEnArray[count][se]}</span>`;
+      //   }
+      // }
       for (let sr = 0; sr < sentencesRuArray[count].length; sr++) {
         translation = markupInSentance.find(
           (translation) => translation.in_ru == sr
@@ -139,7 +167,7 @@ $(document).ready(function () {
         }
       }
       $("#text-sentence-en").replaceWith(
-        `<span id=\"text-sentence-en\" class=\"sentenceEn${count}\">${sentenceEn}</span>`
+        `<span id=\"text-sentence-en\" class=\"sentenceEn${count}\">${sentenceInHTML}</span>`
       );
       $("#text-sentence-ru").replaceWith(
         `<span id=\"text-sentence-ru\" class=\"sentenceRu${count}\">${sentenceRu}</span>`
