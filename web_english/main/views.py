@@ -25,14 +25,16 @@ def send_excerpts_sentences_murkups(text_id):
     translations = recognizer.compose_translation_markup(text_id)
     sentences_en = recognizer.split_text_by_sentences(content.text_en)
     sentences_ru = recognizer.split_text_by_sentences(content.text_ru)
+    sentences_en_composed = recognizer.compose_sentences_for_visualization(
+        excerpts_for_sending)
     sending = {
         "translation_markup": translations,
         "excerpts_for_sending": excerpts_for_sending,
         "punctuations_time": punctuations_time,
         "sentences_en": sentences_en,
         "sentences_ru": sentences_ru,
+        "sentences_en_composed": sentences_en_composed
     }
-    print(recognizer.compose_sentences_for_visualization(excerpts_for_sending))
     return jsonify(sending)
 
 

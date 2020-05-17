@@ -27,7 +27,7 @@
   bottom: -1px;
 }
 .excerpt.active:before {
-  transition: width 2s linear;
+  transition: width 1.85s linear;
   width: 100%;
 }
 .excerpt.active-remove:before {

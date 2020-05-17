@@ -275,7 +275,7 @@ class Recognizer():
         normal_duration = 2.0
         count = 0
         sentences_composed = [
-            {f"sentence{count}": {"durations": [], "text": []}}]
+            {f"sentence": {"durations": [], "text": []}}]
         for excerpt in excerpts:
             if excerpt.find('.') != -1 or excerpt.find('!') != -1 or excerpt.find('?') != -1 or excerpt.find(';') != -1:
                 punctuation_indexes = self.search_punctuation_indexes(excerpt)
@@ -285,43 +285,43 @@ class Recognizer():
                 mini_count = 0
                 for mini_excerpt in excerpt_changed:
                     if len(excerpt_changed) == 1:
-                        sentences_composed[count][f"sentence{count}"]["durations"].append(
+                        sentences_composed[count][f"sentence"]["durations"].append(
                             durations_of_mini_excerpts[mini_count])
-                        sentences_composed[count][f"sentence{count}"]["text"].append(
+                        sentences_composed[count][f"sentence"]["text"].append(
                             mini_excerpt)
                         count += 1
                         sentences_composed.append(
-                            {f"sentence{count}": {"durations": [], "text": []}})
+                            {f"sentence": {"durations": [], "text": []}})
                     elif mini_count == 0:
-                        sentences_composed[count][f"sentence{count}"]["durations"].append(
+                        sentences_composed[count][f"sentence"]["durations"].append(
                             durations_of_mini_excerpts[mini_count])
-                        sentences_composed[count][f"sentence{count}"]["text"].append(
+                        sentences_composed[count][f"sentence"]["text"].append(
                             mini_excerpt)
                         mini_count += 1
                         count += 1
                     elif 0 < mini_count < len(excerpt_changed) - 1:
                         sentences_composed.append(
-                            {f"sentence{count}": {"durations": [], "text": []}})
-                        sentences_composed[count][f"sentence{count}"]["durations"].append(
+                            {f"sentence": {"durations": [], "text": []}})
+                        sentences_composed[count][f"sentence"]["durations"].append(
                             durations_of_mini_excerpts[mini_count])
-                        sentences_composed[count][f"sentence{count}"]["text"].append(
+                        sentences_composed[count][f"sentence"]["text"].append(
                             mini_excerpt)
                         mini_count += 1
                         count += 1
                     else:
                         sentences_composed.append(
-                            {f"sentence{count}": {"durations": [], "text": []}})
-                        sentences_composed[count][f"sentence{count}"]["durations"].append(
+                            {f"sentence": {"durations": [], "text": []}})
+                        sentences_composed[count][f"sentence"]["durations"].append(
                             durations_of_mini_excerpts[mini_count])
-                        sentences_composed[count][f"sentence{count}"]["text"].append(
+                        sentences_composed[count][f"sentence"]["text"].append(
                             mini_excerpt)
             else:
-                sentences_composed[count][f"sentence{count}"]["durations"].append(
+                sentences_composed[count][f"sentence"]["durations"].append(
                     normal_duration)
-                sentences_composed[count][f"sentence{count}"]["text"].append(
+                sentences_composed[count][f"sentence"]["text"].append(
                     excerpt.split())
         for id, item in enumerate(sentences_composed):
-            if sentences_composed[id].get(f"sentence{id}") == {'durations': [], 'text': []}:
+            if sentences_composed[id].get(f"sentence") == {'durations': [], 'text': []}:
                 sentences_composed.remove(item)
         return sentences_composed
 

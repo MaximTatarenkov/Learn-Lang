@@ -13,6 +13,8 @@ $(document).ready(function () {
     sentencesRuArray,
     sentenceEn = "",
     sentenceRu = "",
+    sentencesEnComposed,
+    translation,
     wordId,
     canvas = document.createElement("canvas"),
     ctx = canvas.getContext("2d"),
@@ -48,6 +50,7 @@ $(document).ready(function () {
       translationMarkup = result.translation_markup;
       sentencesEnArray = result.sentences_en;
       sentencesRuArray = result.sentences_ru;
+      sentencesEnComposed = result.sentences_en_composed;
       audio.currentTime = 0;
     });
   })(url);
@@ -86,14 +89,30 @@ $(document).ready(function () {
     }
   };
 
+  addWordInExcerpt = function (countSentences, countExcerpts) {
+    let excerptInSentence,
+      excerptInArray =
+        sentencesEnComposed[countSentences]["sentence"]["text"][countExcerpts];
+    excerptInArray.forEach((word, i) => {
+      if (excerptInSentence) {
+        excerptInSentence += `<span id=\"word${i}\" class=\"word-en\"> ${word}</span>`;
+      } else {
+        excerptInSentence = `<span id=\"word${i}\" class=\"word-en\">${word}</span>`;
+      }
+    });
+    return excerptInSentence;
+  };
+
   addSentences = function (count) {
     if ($("#text-sentence-en").attr("class") !== `sentenceEn${count}`) {
+      // console.log(sentencesEnComposed);
+      // console.log(sentencesEnArray);
+      addWordInExcerpt(1, 1);
       sentenceEn = "";
       sentenceRu = "";
       markupInSentance = translationMarkup.filter(
         (markup) => markup.sentence == count
       );
-
       for (let se = 0; se < sentencesEnArray[count].length; se++) {
         if (sentenceEn) {
           sentenceEn += `<span id=\"word${se}\" class=\"word-en\"> ${sentencesEnArray[count][se]}</span>`;
@@ -101,7 +120,6 @@ $(document).ready(function () {
           sentenceEn = `<span id=\"word${se}\" class=\"word-en\">${sentencesEnArray[count][se]}</span>`;
         }
       }
-      let translation;
       for (let sr = 0; sr < sentencesRuArray[count].length; sr++) {
         translation = markupInSentance.find(
           (translation) => translation.in_ru == sr
@@ -137,6 +155,59 @@ $(document).ready(function () {
       });
     }
   };
+
+  // addSentences = function (count) {
+  //   if ($("#text-sentence-en").attr("class") !== `sentenceEn${count}`) {
+  //     console.log(sentencesEnComposed);
+  //     sentenceEn = "";
+  //     sentenceRu = "";
+  //     markupInSentance = translationMarkup.filter(
+  //       (markup) => markup.sentence == count
+  //     );
+
+  //     for (let se = 0; se < sentencesEnArray[count].length; se++) {
+  //       if (sentenceEn) {
+  //         sentenceEn += `<span id=\"word${se}\" class=\"word-en\"> ${sentencesEnArray[count][se]}</span>`;
+  //       } else {
+  //         sentenceEn = `<span id=\"word${se}\" class=\"word-en\">${sentencesEnArray[count][se]}</span>`;
+  //       }
+  //     }
+  //     let translation;
+  //     for (let sr = 0; sr < sentencesRuArray[count].length; sr++) {
+  //       translation = markupInSentance.find(
+  //         (translation) => translation.in_ru == sr
+  //       );
+  //       if (sentenceRu) {
+  //         if (translation) {
+  //           sentenceRu += `<span id=\"word${translation.in_en}\" class=\"word-ru\"> ${sentencesRuArray[count][sr]}</span>`;
+  //         } else {
+  //           sentenceRu += `<span class=\"word-ru\"> ${sentencesRuArray[count][sr]}</span>`;
+  //         }
+  //       } else {
+  //         if (translation) {
+  //           sentenceRu = `<span id=\"word${translation.in_en}\" class=\"word-ru\">${sentencesRuArray[count][sr]}</span>`;
+  //         } else {
+  //           sentenceRu = `<span class=\"word-ru\">${sentencesRuArray[count][sr]}</span>`;
+  //         }
+  //       }
+  //     }
+  //     $("#text-sentence-en").replaceWith(
+  //       `<span id=\"text-sentence-en\" class=\"sentenceEn${count}\">${sentenceEn}</span>`
+  //     );
+  //     $("#text-sentence-ru").replaceWith(
+  //       `<span id=\"text-sentence-ru\" class=\"sentenceRu${count}\">${sentenceRu}</span>`
+  //     );
+
+  //     $(".word-ru").hover(function () {
+  //       wordId = $(this).attr("id");
+  //       $(`#${wordId}.word-en`).toggleClass("markup");
+  //     });
+  //     $(".word-en").hover(function () {
+  //       wordId = $(this).attr("id");
+  //       $(`#${wordId}.word-ru`).toggleClass("markup");
+  //     });
+  //   }
+  // };
 
   // Play
   playFromBeginning = function () {
