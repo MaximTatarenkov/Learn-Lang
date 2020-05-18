@@ -5,6 +5,8 @@
   max-height: 350px;
   overflow: auto;
   margin-bottom: 20px;
+  font-size: 19px;
+  font-family: "Times New Roman", Times, serif;
 }
 #text-sentence-en {
   font-size: 25px;
@@ -13,8 +15,6 @@
   font-size: 25px;
 }
 .excerpt {
-  font-size: 19px;
-  font-family: "Times New Roman", Times, serif;
   position: relative;
 }
 .excerpt:before {

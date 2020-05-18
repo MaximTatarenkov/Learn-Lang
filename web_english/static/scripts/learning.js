@@ -1,62 +1,57 @@
 $(document).ready(function () {
-  // Объявляем переменные
-  let audio = new Audio(AUDIO),
-    pause = false,
+  let pause = false,
     stopPlay = true,
     second = 0,
     dataId = $("#text_en").attr("data-id"),
     url = "send_excerpts/" + dataId,
+    item,
+    excerpts,
     punctuationsTime,
     translationMarkup,
-    markupInSentance,
-    sentencesEnArray,
     sentencesRuArray,
-    sentenceEn = "",
-    sentenceRu = "",
     sentencesEnComposed,
-    sentenceInHTML,
-    translation,
-    wordId,
     canvas = document.createElement("canvas"),
-    ctx = canvas.getContext("2d"),
-    length_sentence;
+    ctx = canvas.getContext("2d");
   ctx.font = "19px Times New Roman serif";
   // currentBack,
   // currentForvard;
   const INTERVAL = 2,
+    audio = new Audio(AUDIO),
     CONTEINERWIDTH = 830;
 
-  // Формируем главный текст, ищем в чанках знаки пунктуации и по ним создаем массив для дальнейшего использования при выводе предложений
   (function (url) {
     $.getJSON(url, function (result) {
-      length_sentence = 0;
-      for (let i = 0; i < result.excerpts_for_sending.length; i++) {
-        excerpt = result.excerpts_for_sending[i];
-        length_sentence += ctx.measureText(excerpt).width;
-        if (length_sentence > CONTEINERWIDTH) {
-          text_en.insertAdjacentHTML(
-            "beforeend",
-            `<br><span id=\"a${i}\" class=\"excerpt active-remove\">${excerpt}</span>`
-          );
-          length_sentence = ctx.measureText(excerpt).width;
-        } else {
-          excerpt = " " + excerpt;
-          text_en.insertAdjacentHTML(
-            "beforeend",
-            `<span id=\"a${i}\" class=\"excerpt active-remove\">${excerpt}</span>`
-          );
-        }
-      }
+      excerpts = result.excerpts_for_sending;
+      composeText(excerpts);
       punctuationsTime = result.punctuations_time;
       translationMarkup = result.translation_markup;
-      sentencesEnArray = result.sentences_en;
       sentencesRuArray = result.sentences_ru;
       sentencesEnComposed = result.sentences_en_composed;
       audio.currentTime = 0;
     });
   })(url);
 
-  // Привязка подчеркивания и вывода предложений к воспроизведению аудиофайла
+  composeText = function (excerpts) {
+    let length_sentence = 0;
+    for (let i = 0; i < excerpts.length; i++) {
+      excerpt = excerpts[i];
+      length_sentence += ctx.measureText(excerpt).width;
+      if (length_sentence > CONTEINERWIDTH) {
+        text_en.insertAdjacentHTML(
+          "beforeend",
+          `<br><span id=\"a${i}\" class=\"excerpt active-remove\">${excerpt}</span>`
+        );
+        length_sentence = ctx.measureText(excerpt).width;
+      } else {
+        excerpt = " " + excerpt;
+        text_en.insertAdjacentHTML(
+          "beforeend",
+          `<span id=\"a${i}\" class=\"excerpt active-remove\">${excerpt}</span>`
+        );
+      }
+    }
+  };
+
   (function () {
     $(audio).bind("timeupdate", function () {
       second = parseFloat(audio.currentTime);
@@ -68,8 +63,7 @@ $(document).ready(function () {
           break;
         }
       }
-      addClasses(i);
-
+      addClassesInText(i);
       for (n = 0; n < punctuationsTime.length; n++) {
         if (punctuationsTime[n] <= second && second < punctuationsTime[n + 1]) {
           break;
@@ -79,165 +73,132 @@ $(document).ready(function () {
     });
   })();
 
-  addClasses = function (count) {
-    let item;
-    item = document.querySelector(`#a${count}`);
+  addClassesInText = function (count) {
     if (pause || stopPlay || $(`#a${count}`).hasClass("active")) {
       return;
     } else {
+      item = document.querySelector(`#a${count}`);
       item.classList.remove("active-remove");
       item.classList.add("active");
     }
   };
 
-  addWordInExcerpt = function (countSentences, countExcerpt, wordsCountBefore) {
+  addSentences = function (count) {
+    let sentenceEnInHTML, sentenceRuInHTML;
+    if ($("#text-sentence-en").attr("class") !== `sentenceEn${count}`) {
+      sentenceEnInHTML = addExcerptInEnSentence(count);
+      sentenceRuInHTML = addWordInRuSentence(count);
+      replaceSentences(count, sentenceEnInHTML, sentenceRuInHTML);
+      highlightWordsOnHover();
+    }
+  };
+
+  replaceSentences = function (count, sentenceEnInHTML, sentenceRuInHTML) {
+    $("#text-sentence-en").replaceWith(
+      `<span id=\"text-sentence-en\" class=\"sentenceEn${count}\">${sentenceEnInHTML}</span>`
+    );
+    $("#text-sentence-ru").replaceWith(
+      `<span id=\"text-sentence-ru\" class=\"sentenceRu${count}\">${sentenceRuInHTML}</span>`
+    );
+  };
+
+  highlightWordsOnHover = function () {
+    let wordId;
+    $(".word-ru").hover(function () {
+      wordId = $(this).attr("id");
+      $(`#${wordId}.word-en`).toggleClass("markup");
+    });
+    $(".word-en").hover(function () {
+      wordId = $(this).attr("id");
+      $(`#${wordId}.word-ru`).toggleClass("markup");
+    });
+  };
+
+  addExcerptInEnSentence = function (countSentences) {
+    let sentenceEnInHTML = "",
+      excerptInHTML,
+      numberOfPreviousWords,
+      inArray = sentencesEnComposed[countSentences]["sentence"];
+    inArray["text"].forEach((excerpt, countExcerpt) => {
+      numberOfPreviousWords = countPreviousWords(inArray["text"], countExcerpt);
+      excerptInHTML = addEnWordInExcerpt(
+        countSentences,
+        countExcerpt,
+        numberOfPreviousWords
+      );
+      if (sentenceEnInHTML) {
+        sentenceEnInHTML += `<span id=\"exc${countExcerpt}\" class=\"excerpt\" data-duration=\"${inArray["durations"][countExcerpt]}\"> ${excerptInHTML}</span>`;
+      } else {
+        sentenceEnInHTML = `<span id=\"exc${countExcerpt}\" class=\"excerpt\" data-duration=\"${inArray["durations"][countExcerpt]}\">${excerptInHTML}</span>`;
+      }
+    });
+    return sentenceEnInHTML;
+  };
+
+  countPreviousWords = function (inArray, countExcerpt) {
+    let numberOfPreviousWords, slicedArray;
+    if (countExcerpt) {
+      slicedArray = inArray.slice(0, countExcerpt);
+      numberOfPreviousWords = slicedArray.reduce(
+        (acc, excerpt) => (acc += excerpt.length),
+        0
+      );
+    } else {
+      numberOfPreviousWords = 0;
+    }
+    return numberOfPreviousWords;
+  };
+
+  addEnWordInExcerpt = function (
+    countSentences,
+    countExcerpt,
+    wordsCountBefore
+  ) {
     let excerptInHTML,
       inArray =
         sentencesEnComposed[countSentences]["sentence"]["text"][countExcerpt];
-    inArray.forEach((word, i) => {
+    inArray.forEach((word, wordCount) => {
       if (excerptInHTML) {
         excerptInHTML += `<span id=\"word${
-          i + wordsCountBefore
+          wordCount + wordsCountBefore
         }\" class=\"word-en\"> ${word}</span>`;
       } else {
         excerptInHTML = `<span id=\"word${
-          i + wordsCountBefore
+          wordCount + wordsCountBefore
         }\" class=\"word-en\">${word}</span>`;
       }
     });
     return excerptInHTML;
   };
 
-  addExcerptInSentence = function (countSentences) {
-    let sentenceInHTML = "",
-      excerptInHTML,
-      wordsCountBefore,
-      inArray = sentencesEnComposed[countSentences]["sentence"]["text"];
-    inArray.forEach((excerpt, countExcerpt) => {
-      if (countExcerpt) {
-        wordsCountBefore = inArray[countExcerpt - 1].length;
-      } else {
-        wordsCountBefore = 0;
-      }
-      excerptInHTML = addWordInExcerpt(
-        countSentences,
-        countExcerpt,
-        wordsCountBefore
-      );
-      if (sentenceInHTML) {
-        sentenceInHTML += `<span id=\"excerpt-in-sentence${countExcerpt}\" class=\"excerpt\"> ${excerptInHTML}</span>`;
-      } else {
-        sentenceInHTML = `<span id=\"excerpt-in-sentence${countExcerpt}\" class=\"excerpt\">${excerptInHTML}</span>`;
-      }
-    });
-    return sentenceInHTML;
-  };
-
-  addSentences = function (count) {
-    if ($("#text-sentence-en").attr("class") !== `sentenceEn${count}`) {
-      sentenceEn = "";
-      sentenceRu = "";
-      sentenceInHTML = addExcerptInSentence(count);
+  addWordInRuSentence = function (countSentences) {
+    let sentenceRuInHTML = "",
+      translation,
+      inArray = sentencesRuArray[countSentences],
       markupInSentance = translationMarkup.filter(
-        (markup) => markup.sentence == count
+        (markup) => markup.sentence == countSentences
       );
-      // for (let se = 0; se < sentencesEnArray[count].length; se++) {
-      //   if (sentenceEn) {
-      //     sentenceEn += `<span id=\"word${se}\" class=\"word-en\"> ${sentencesEnArray[count][se]}</span>`;
-      //   } else {
-      //     sentenceEn = `<span id=\"word${se}\" class=\"word-en\">${sentencesEnArray[count][se]}</span>`;
-      //   }
-      // }
-      for (let sr = 0; sr < sentencesRuArray[count].length; sr++) {
-        translation = markupInSentance.find(
-          (translation) => translation.in_ru == sr
-        );
-        if (sentenceRu) {
-          if (translation) {
-            sentenceRu += `<span id=\"word${translation.in_en}\" class=\"word-ru\"> ${sentencesRuArray[count][sr]}</span>`;
-          } else {
-            sentenceRu += `<span class=\"word-ru\"> ${sentencesRuArray[count][sr]}</span>`;
-          }
+    inArray.forEach((word, wordCount) => {
+      translation = markupInSentance.find(
+        (translation) => translation.in_ru == wordCount
+      );
+      if (sentenceRuInHTML) {
+        if (translation) {
+          sentenceRuInHTML += `<span id=\"word${translation.in_en}\" class=\"word-ru\"> ${word}</span>`;
         } else {
-          if (translation) {
-            sentenceRu = `<span id=\"word${translation.in_en}\" class=\"word-ru\">${sentencesRuArray[count][sr]}</span>`;
-          } else {
-            sentenceRu = `<span class=\"word-ru\">${sentencesRuArray[count][sr]}</span>`;
-          }
+          sentenceRuInHTML += `<span id=\"word\" class=\"word-ru\"> ${word}</span>`;
+        }
+      } else {
+        if (translation) {
+          sentenceRuInHTML = `<span id=\"word${translation.in_en}\" class=\"word-ru\">${word}</span>`;
+        } else {
+          sentenceRuInHTML = `<span id=\"word\" class=\"word-ru\">${word}</span>`;
         }
       }
-      $("#text-sentence-en").replaceWith(
-        `<span id=\"text-sentence-en\" class=\"sentenceEn${count}\">${sentenceInHTML}</span>`
-      );
-      $("#text-sentence-ru").replaceWith(
-        `<span id=\"text-sentence-ru\" class=\"sentenceRu${count}\">${sentenceRu}</span>`
-      );
-
-      $(".word-ru").hover(function () {
-        wordId = $(this).attr("id");
-        $(`#${wordId}.word-en`).toggleClass("markup");
-      });
-      $(".word-en").hover(function () {
-        wordId = $(this).attr("id");
-        $(`#${wordId}.word-ru`).toggleClass("markup");
-      });
-    }
+    });
+    return sentenceRuInHTML;
   };
 
-  // addSentences = function (count) {
-  //   if ($("#text-sentence-en").attr("class") !== `sentenceEn${count}`) {
-  //     console.log(sentencesEnComposed);
-  //     sentenceEn = "";
-  //     sentenceRu = "";
-  //     markupInSentance = translationMarkup.filter(
-  //       (markup) => markup.sentence == count
-  //     );
-
-  //     for (let se = 0; se < sentencesEnArray[count].length; se++) {
-  //       if (sentenceEn) {
-  //         sentenceEn += `<span id=\"word${se}\" class=\"word-en\"> ${sentencesEnArray[count][se]}</span>`;
-  //       } else {
-  //         sentenceEn = `<span id=\"word${se}\" class=\"word-en\">${sentencesEnArray[count][se]}</span>`;
-  //       }
-  //     }
-  //     let translation;
-  //     for (let sr = 0; sr < sentencesRuArray[count].length; sr++) {
-  //       translation = markupInSentance.find(
-  //         (translation) => translation.in_ru == sr
-  //       );
-  //       if (sentenceRu) {
-  //         if (translation) {
-  //           sentenceRu += `<span id=\"word${translation.in_en}\" class=\"word-ru\"> ${sentencesRuArray[count][sr]}</span>`;
-  //         } else {
-  //           sentenceRu += `<span class=\"word-ru\"> ${sentencesRuArray[count][sr]}</span>`;
-  //         }
-  //       } else {
-  //         if (translation) {
-  //           sentenceRu = `<span id=\"word${translation.in_en}\" class=\"word-ru\">${sentencesRuArray[count][sr]}</span>`;
-  //         } else {
-  //           sentenceRu = `<span class=\"word-ru\">${sentencesRuArray[count][sr]}</span>`;
-  //         }
-  //       }
-  //     }
-  //     $("#text-sentence-en").replaceWith(
-  //       `<span id=\"text-sentence-en\" class=\"sentenceEn${count}\">${sentenceEn}</span>`
-  //     );
-  //     $("#text-sentence-ru").replaceWith(
-  //       `<span id=\"text-sentence-ru\" class=\"sentenceRu${count}\">${sentenceRu}</span>`
-  //     );
-
-  //     $(".word-ru").hover(function () {
-  //       wordId = $(this).attr("id");
-  //       $(`#${wordId}.word-en`).toggleClass("markup");
-  //     });
-  //     $(".word-en").hover(function () {
-  //       wordId = $(this).attr("id");
-  //       $(`#${wordId}.word-ru`).toggleClass("markup");
-  //     });
-  //   }
-  // };
-
-  // Play
   playFromBeginning = function () {
     pause = false;
     stopPlay = false;
@@ -245,7 +206,6 @@ $(document).ready(function () {
     return;
   };
 
-  // Возобновление воспроизведения после паузы
   resumePlaying = function () {
     if (stopPlay) {
       return;
@@ -266,7 +226,6 @@ $(document).ready(function () {
 
   document.getElementById("play").addEventListener("click", playButtonHandler);
 
-  // Пауза (возвращает на ближий интервал в 2 секунды) ДОРАБОТАТЬ!
   set_pause = function () {
     if (stopPlay) {
       return;
@@ -294,7 +253,6 @@ $(document).ready(function () {
     .getElementById("pause")
     .addEventListener("click", pauseButtonHandler);
 
-  // Stop
   stop_playing = function () {
     stopPlay = true;
     pause = false;
@@ -313,17 +271,14 @@ $(document).ready(function () {
 
   document.getElementById("stop").addEventListener("click", stopButtonHandler);
 
-  // Громкость
   $("#volume").change(function () {
     audio.volume = parseFloat(this.value / 10);
   });
 
-  // Возврат к началу при завершении воспроизведения
   audio.addEventListener("ended", function () {
     setTimeout(stop_playing, 4000);
   });
 
-  // Пауза при сворачивании окна
   document.addEventListener("visibilitychange", function () {
     if (document.visibilityState !== "visible") {
       if (stopPlay || pause) {
@@ -333,7 +288,7 @@ $(document).ready(function () {
     }
   });
 });
-// Прогресс
+
 //   (function () {
 //     $(audio).bind("timeupdate", function () {
 //       let s = parseInt(audio.currentTime % 60);
@@ -350,7 +305,6 @@ $(document).ready(function () {
 //     });
 //   })();
 
-// // Вернуть на 3 секунды назад, либо пауза
 // set_back = function () {
 //   if (stopPlay) {
 //     return;
@@ -368,7 +322,6 @@ $(document).ready(function () {
 //   }
 // };
 
-// // Вперед на 3 секунды либо на ближайший следующий интервал в 3 секунды
 // set_forvard = function () {
 //   if (stopPlay) {
 //     stopPlay = false;

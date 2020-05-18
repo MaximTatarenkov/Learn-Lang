@@ -23,7 +23,6 @@ def send_excerpts_sentences_murkups(text_id):
     excerpts_for_sending = recognizer.compose_excerpts_for_sending(text_id)
     punctuations_time = recognizer.find_punctuations_time(excerpts_for_sending)
     translations = recognizer.compose_translation_markup(text_id)
-    sentences_en = recognizer.split_text_by_sentences(content.text_en)
     sentences_ru = recognizer.split_text_by_sentences(content.text_ru)
     sentences_en_composed = recognizer.compose_sentences_for_visualization(
         excerpts_for_sending)
@@ -31,7 +30,6 @@ def send_excerpts_sentences_murkups(text_id):
         "translation_markup": translations,
         "excerpts_for_sending": excerpts_for_sending,
         "punctuations_time": punctuations_time,
-        "sentences_en": sentences_en,
         "sentences_ru": sentences_ru,
         "sentences_en_composed": sentences_en_composed
     }
