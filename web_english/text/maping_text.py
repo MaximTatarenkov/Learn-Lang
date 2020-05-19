@@ -1,3 +1,4 @@
+import copy
 import os
 import re
 
@@ -272,10 +273,10 @@ class Recognizer():
         return split_text_by_sentences
 
     def compose_sentences_for_visualization(self, excerpts):
-        normal_duration = 2.0
+        normal_duration = 20
         count = 0
         sentences_composed = [
-            {f"sentence": {"durations": [], "text": []}}]
+            {"durations": [], "text": []}]
         for excerpt in excerpts:
             if excerpt.find('.') != -1 or excerpt.find('!') != -1 or excerpt.find('?') != -1 or excerpt.find(';') != -1:
                 punctuation_indexes = self.search_punctuation_indexes(excerpt)
@@ -285,45 +286,57 @@ class Recognizer():
                 mini_count = 0
                 for mini_excerpt in excerpt_changed:
                     if len(excerpt_changed) == 1:
-                        sentences_composed[count][f"sentence"]["durations"].append(
-                            durations_of_mini_excerpts[mini_count])
-                        sentences_composed[count][f"sentence"]["text"].append(
+                        sentences_composed[count]["durations"].append(
+                            durations_of_mini_excerpts[mini_count] * 10)
+                        sentences_composed[count]["text"].append(
                             mini_excerpt)
                         count += 1
                         sentences_composed.append(
-                            {f"sentence": {"durations": [], "text": []}})
+                            {"durations": [], "text": []})
                     elif mini_count == 0:
-                        sentences_composed[count][f"sentence"]["durations"].append(
-                            durations_of_mini_excerpts[mini_count])
-                        sentences_composed[count][f"sentence"]["text"].append(
+                        sentences_composed[count]["durations"].append(
+                            durations_of_mini_excerpts[mini_count] * 10)
+                        sentences_composed[count]["text"].append(
                             mini_excerpt)
                         mini_count += 1
                         count += 1
                     elif 0 < mini_count < len(excerpt_changed) - 1:
                         sentences_composed.append(
-                            {f"sentence": {"durations": [], "text": []}})
-                        sentences_composed[count][f"sentence"]["durations"].append(
-                            durations_of_mini_excerpts[mini_count])
-                        sentences_composed[count][f"sentence"]["text"].append(
+                            {"durations": [], "text": []})
+                        sentences_composed[count]["durations"].append(
+                            durations_of_mini_excerpts[mini_count] * 10)
+                        sentences_composed[count]["text"].append(
                             mini_excerpt)
                         mini_count += 1
                         count += 1
                     else:
                         sentences_composed.append(
-                            {f"sentence": {"durations": [], "text": []}})
-                        sentences_composed[count][f"sentence"]["durations"].append(
-                            durations_of_mini_excerpts[mini_count])
-                        sentences_composed[count][f"sentence"]["text"].append(
+                            {"durations": [], "text": []})
+                        sentences_composed[count]["durations"].append(
+                            durations_of_mini_excerpts[mini_count] * 10)
+                        sentences_composed[count]["text"].append(
                             mini_excerpt)
             else:
-                sentences_composed[count][f"sentence"]["durations"].append(
+                sentences_composed[count]["durations"].append(
                     normal_duration)
-                sentences_composed[count][f"sentence"]["text"].append(
+                sentences_composed[count]["text"].append(
                     excerpt.split())
         for id, item in enumerate(sentences_composed):
-            if sentences_composed[id].get(f"sentence") == {'durations': [], 'text': []}:
+            if sentences_composed[id] == {'durations': [], 'text': []}:
                 sentences_composed.remove(item)
         return sentences_composed
+
+    def compose_excerpts_for_text(self, excerpts_for_sentences):
+        excerpts_for_text = copy.deepcopy(excerpts_for_sentences)
+        sentence_count = 0
+        for excerpts in excerpts_for_text:
+            excerpt_count = 0
+            for excerpt in excerpts['text']:
+                excerpts_for_text[sentence_count]['text'][excerpt_count] = ' '.join(
+                    excerpt)
+                excerpt_count += 1
+            sentence_count += 1
+        return excerpts_for_text
 
     def divide_excerpts_in_time(self, punctuation_indexes, excerpt):
         durations_of_mini_excerpts = []

@@ -10,14 +10,16 @@
 }
 #text-sentence-en {
   font-size: 25px;
+  font-family: "Times New Roman", Times, serif;
 }
 #text-sentence-ru {
   font-size: 25px;
+  font-family: "Times New Roman", Times, serif;
 }
-.excerpt {
+.excerpt-text {
   position: relative;
 }
-.excerpt:before {
+.excerpt-text:before {
   position: absolute;
   height: 1px;
   width: 0%;
@@ -26,15 +28,39 @@
   content: "";
   bottom: -1px;
 }
-.excerpt.active:before {
+/* .excerpt-text.active:before {
   transition: width 1.85s linear;
   width: 100%;
-}
-.excerpt.active-remove:before {
+} */
+.excerpt-text.active-remove:before {
   width: 0%;
   transition: initial;
 }
-.excerpt.active-fast:before {
+.excerpt-text.active-fast:before {
+  width: 100%;
+  transition: initial;
+}
+.excerpt-sentence {
+  position: relative;
+}
+.excerpt-sentence:before {
+  position: absolute;
+  height: 1px;
+  width: 0%;
+  left: 0;
+  background: black;
+  content: "";
+  bottom: -1px;
+}
+/* .excerpt-sentence.active:before {
+  transition: width 1.85s linear;
+  width: 100%;
+} */
+.excerpt-sentence.active-remove:before {
+  width: 0%;
+  transition: initial;
+}
+.excerpt-sentence.active-fast:before {
   width: 100%;
   transition: initial;
 }
@@ -54,43 +80,83 @@
   cursor: pointer;
 }
 
-.excerpt.active02:before {
+.excerpt-text.active2:before {
   transition: width 0.2s linear;
   width: 100%;
 }
-.excerpt.active04:before {
+.excerpt-text.active4:before {
   transition: width 0.4s linear;
   width: 100%;
 }
-.excerpt.active06:before {
+.excerpt-text.active6:before {
   transition: width 0.6s linear;
   width: 100%;
 }
-.excerpt.active08:before {
+.excerpt-text.active8:before {
   transition: width 0.8s linear;
   width: 100%;
 }
-.excerpt.active10:before {
+.excerpt-text.active10:before {
   transition: width 1s linear;
   width: 100%;
 }
-.excerpt.active12:before {
+.excerpt-text.active12:before {
   transition: width 1.2s linear;
   width: 100%;
 }
-.excerpt.active14:before {
+.excerpt-text.active14:before {
   transition: width 1.4s linear;
   width: 100%;
 }
-.excerpt.active16:before {
+.excerpt-text.active16:before {
   transition: width 1.6s linear;
   width: 100%;
 }
-.excerpt.active18:before {
+.excerpt-text.active18:before {
   transition: width 1.8s linear;
   width: 100%;
 }
-.excerpt.active20:before {
+.excerpt-text.active20:before {
+  transition: width 2s linear;
+  width: 100%;
+}
+.excerpt-sentence.active2:before {
+  transition: width 0.2s linear;
+  width: 100%;
+}
+.excerpt-sentence.active4:before {
+  transition: width 0.4s linear;
+  width: 100%;
+}
+.excerpt-sentence.active6:before {
+  transition: width 0.6s linear;
+  width: 100%;
+}
+.excerpt-sentence.active8:before {
+  transition: width 0.8s linear;
+  width: 100%;
+}
+.excerpt-sentence.active10:before {
+  transition: width 1s linear;
+  width: 100%;
+}
+.excerpt-sentence.active12:before {
+  transition: width 1.2s linear;
+  width: 100%;
+}
+.excerpt-sentence.active14:before {
+  transition: width 1.4s linear;
+  width: 100%;
+}
+.excerpt-sentence.active16:before {
+  transition: width 1.6s linear;
+  width: 100%;
+}
+.excerpt-sentence.active18:before {
+  transition: width 1.8s linear;
+  width: 100%;
+}
+.excerpt-sentence.active20:before {
   transition: width 2s linear;
   width: 100%;
 }

@@ -20,18 +20,20 @@ def learning(text_id):
 def send_excerpts_sentences_murkups(text_id):
     content = Content.query.filter(Content.id == text_id).first()
     recognizer = Recognizer(content.title_text)
-    excerpts_for_sending = recognizer.compose_excerpts_for_sending(text_id)
-    punctuations_time = recognizer.find_punctuations_time(excerpts_for_sending)
+    excerpts = recognizer.compose_excerpts_for_sending(text_id)
+    punctuations_time = recognizer.find_punctuations_time(excerpts)
     translations = recognizer.compose_translation_markup(text_id)
     sentences_ru = recognizer.split_text_by_sentences(content.text_ru)
-    sentences_en_composed = recognizer.compose_sentences_for_visualization(
-        excerpts_for_sending)
+    excerpts_for_sentences = recognizer.compose_sentences_for_visualization(
+        excerpts)
+    excerpts_for_text = recognizer.compose_excerpts_for_text(
+        excerpts_for_sentences)
     sending = {
         "translation_markup": translations,
-        "excerpts_for_sending": excerpts_for_sending,
+        "excerpts_for_text": excerpts_for_text,
         "punctuations_time": punctuations_time,
         "sentences_ru": sentences_ru,
-        "sentences_en_composed": sentences_en_composed
+        "excerpts_for_sentences": excerpts_for_sentences
     }
     return jsonify(sending)
 
