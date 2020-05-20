@@ -2,7 +2,8 @@ $(document).ready(function () {
   let pause = false,
     stopPlay = true,
     second = 0,
-    duration,
+    arrayOfDurations,
+    currentExcerpt,
     dataId = $("#text_en").attr("data-id"),
     url = "send_excerpts/" + dataId,
     itemT,
@@ -15,7 +16,6 @@ $(document).ready(function () {
     excerptsForSentences,
     canvas = document.createElement("canvas"),
     ctx = canvas.getContext("2d");
-  ctx.font = "19px Times New Roman serif";
   // currentBack,
   // currentForvard;
   const audio = new Audio(AUDIO),
@@ -28,13 +28,27 @@ $(document).ready(function () {
       translationMarkup = result.translation_markup;
       sentencesRuArray = result.sentences_ru;
       excerptsForSentences = result.excerpts_for_sentences;
+      arrayOfDurations = createArrayOfDurations(excerptsForText);
       audio.currentTime = 0;
       composeText();
     });
   })(url);
 
+  createArrayOfDurations = function (excerptsForText) {
+    let durations = [],
+      array = excerptsForText.map((sentence) => sentence["durations"]);
+    array.forEach((excerpt) => {
+      durations = $.merge(durations, excerpt);
+    });
+    durations.forEach((duration, i) => {
+      durations[i] = duration / 10;
+    });
+    return durations;
+  };
+
   composeText = function () {
-    let length_sentence = 0,
+    ctx.font = "19px Times New Roman serif";
+    let stitchLength = 0,
       numberPreviousExcerpts;
     excerptsForText.forEach((sentence, countSentences) => {
       numberPreviousExcerpts = countPreviousExcerpts(
@@ -42,8 +56,8 @@ $(document).ready(function () {
         excerptsForText
       );
       sentence.text.forEach((excerpt, countExcerpt) => {
-        length_sentence += ctx.measureText(excerpt).width;
-        if (length_sentence > CONTEINERWIDTH) {
+        stitchLength += ctx.measureText(excerpt).width;
+        if (stitchLength > CONTEINERWIDTH) {
           text_en.insertAdjacentHTML(
             "beforeend",
             `<br><span class=\"excerpt-text exc${
@@ -52,30 +66,42 @@ $(document).ready(function () {
               excerptsForText[countSentences]["durations"][countExcerpt]
             }\">${excerpt}</span>`
           );
-          length_sentence = ctx.measureText(excerpt).width;
+          stitchLength = ctx.measureText(excerpt).width;
         } else {
-          excerpt = " " + excerpt;
           text_en.insertAdjacentHTML(
             "beforeend",
             `<span class=\"excerpt-text exc${
               numberPreviousExcerpts + countExcerpt
             } active-remove\" data-duration=\"${
               excerptsForText[countSentences]["durations"][countExcerpt]
-            }\">${excerpt}</span>`
+            }\"> ${excerpt}</span>`
           );
         }
       });
     });
   };
 
+  calculateExcerptTime = function (iteration) {
+    let slicedArrayOfDurations = arrayOfDurations.slice(0, iteration),
+      currentDuration = slicedArrayOfDurations.reduce(
+        (acc, duration) => (acc += duration),
+        0
+      );
+    return currentDuration;
+  };
+
   (function () {
     $(audio).bind("timeupdate", function () {
       second = parseFloat(audio.currentTime);
-      let chunksLength = $(".excerpt-text").length,
+      let excerptsLength = $(".excerpt-text").length,
         i,
         n;
-      for (i = 0; i < chunksLength; i++) {
-        if (duration * i <= second && second < duration * (i + 1)) {
+      for (i = 0; i < excerptsLength; i++) {
+        currentExcerpt = i;
+        if (
+          calculateExcerptTime(i) <= second &&
+          second < calculateExcerptTime(i + 1)
+        ) {
           break;
         }
       }
@@ -98,8 +124,6 @@ $(document).ready(function () {
     ) {
       return;
     } else {
-      duration = $(`.excerpt-text.exc${count + 1}`).attr("data-duration") / 10;
-      console.log(duration);
       itemT = document.querySelector(`.excerpt-text.exc${count}`);
       excerptDuration = $(`.excerpt-text.exc${count}`).attr("data-duration");
       itemT.classList.remove("active-remove");
@@ -121,8 +145,11 @@ $(document).ready(function () {
   };
 
   addExcerptInEnSentence = function (countSentences) {
+    ctx.font = "25px Times New Roman serif";
     let sentenceEnInHTML = "",
       excerptInHTML,
+      textOfExcerpts,
+      stitchLength = 0,
       numberOfPreviousWords,
       numberPreviousExcerpts,
       inArray = excerptsForSentences[countSentences];
@@ -137,18 +164,21 @@ $(document).ready(function () {
         countExcerpt,
         numberOfPreviousWords
       );
-      if (sentenceEnInHTML) {
-        sentenceEnInHTML += `<span class=\"excerpt-sentence exc${
-          countExcerpt + numberPreviousExcerpts
-        } active-remove\" data-duration=\"${
-          inArray["durations"][countExcerpt]
-        }\"> ${excerptInHTML}</span>`;
-      } else {
+      textOfExcerpts = $(`.exc${countExcerpt + numberPreviousExcerpts}`).text();
+      stitchLength += ctx.measureText(textOfExcerpts).width;
+      if (!sentenceEnInHTML) {
         sentenceEnInHTML = `<span class=\"excerpt-sentence exc${
           countExcerpt + numberPreviousExcerpts
-        } active-remove\" data-duration=\"${
-          inArray["durations"][countExcerpt]
-        }\">${excerptInHTML}</span>`;
+        } active-remove\">${excerptInHTML}</span>`;
+      } else if (stitchLength < CONTEINERWIDTH) {
+        sentenceEnInHTML += `<span class=\"excerpt-sentence exc${
+          countExcerpt + numberPreviousExcerpts
+        } active-remove\"> ${excerptInHTML}</span>`;
+      } else {
+        sentenceEnInHTML += `<br><span class=\"excerpt-sentence exc${
+          countExcerpt + numberPreviousExcerpts
+        } active-remove\">${excerptInHTML}</span>`;
+        stitchLength = ctx.measureText(textOfExcerpts).width;
       }
     });
     return sentenceEnInHTML;
@@ -203,6 +233,15 @@ $(document).ready(function () {
     return excerptInHTML;
   };
 
+  replaceSentences = function (count, sentenceEnInHTML, sentenceRuInHTML) {
+    $("#text-sentence-en").replaceWith(
+      `<span id=\"text-sentence-en\" class=\"sentenceEn${count}\">${sentenceEnInHTML}</span>`
+    );
+    $("#text-sentence-ru").replaceWith(
+      `<span id=\"text-sentence-ru\" class=\"sentenceRu${count}\">${sentenceRuInHTML}</span>`
+    );
+  };
+
   addWordInRuSentence = function (countSentences) {
     let sentenceRuInHTML = "",
       translation,
@@ -229,15 +268,6 @@ $(document).ready(function () {
       }
     });
     return sentenceRuInHTML;
-  };
-
-  replaceSentences = function (count, sentenceEnInHTML, sentenceRuInHTML) {
-    $("#text-sentence-en").replaceWith(
-      `<span id=\"text-sentence-en\" class=\"sentenceEn${count}\">${sentenceEnInHTML}</span>`
-    );
-    $("#text-sentence-ru").replaceWith(
-      `<span id=\"text-sentence-ru\" class=\"sentenceRu${count}\">${sentenceRuInHTML}</span>`
-    );
   };
 
   highlightWordsOnHover = function () {
@@ -280,16 +310,32 @@ $(document).ready(function () {
   document.getElementById("play").addEventListener("click", playButtonHandler);
 
   set_pause = function () {
+    let currentDuration = calculateExcerptTime(currentExcerpt);
     if (stopPlay) {
       return;
     }
     pause = true;
     stopPlay = false;
     audio.pause();
-    currentBack = audio.currentTime - (audio.currentTime % duration);
+    // 2.5 - это чуть больше одного обновления timeupdate (чтобы не было деления на 0)
+    if (audio.currentTime > 2.5) {
+      currentBack = audio.currentTime - (audio.currentTime % currentDuration);
+    } else {
+      currentBack = 0;
+    }
     audio.currentTime = currentBack;
-    $(".excerpt-text.active:last").addClass("active-remove");
-    $(".excerpt-text.active:last").removeClass("active");
+    $(
+      `.excerpt-text.exc${currentExcerpt}.active${excerptDuration}:last`
+    ).addClass("active-remove");
+    $(
+      `.excerpt-text.exc${currentExcerpt}.active${excerptDuration}:last`
+    ).removeClass(`active${excerptDuration}`);
+    $(
+      `.excerpt-sentence.exc${currentExcerpt}.active${excerptDuration}:last`
+    ).addClass("active-remove");
+    $(
+      `.excerpt-sentence.exc${currentExcerpt}.active${excerptDuration}:last`
+    ).removeClass(`active${excerptDuration}`);
     return;
   };
 
@@ -307,22 +353,21 @@ $(document).ready(function () {
     .addEventListener("click", pauseButtonHandler);
 
   stop_playing = function () {
+    let countCSSClasses = 10,
+      multiplicityCSSClasses = 2;
     stopPlay = true;
     pause = false;
     audio.pause();
     audio.currentTime = 0;
-    $(".excerpt-text").removeClass("active20");
-    $(".excerpt-text").removeClass("active18");
-    $(".excerpt-text").removeClass("active16");
-    $(".excerpt-text").removeClass("active14");
-    $(".excerpt-text").removeClass("active12");
-    $(".excerpt-text").removeClass("active10");
-    $(".excerpt-text").removeClass("active8");
-    $(".excerpt-text").removeClass("active6");
-    $(".excerpt-text").removeClass("active4");
-    $(".excerpt-text").removeClass("active2");
+
+    for (let y = 0; y <= countCSSClasses; y++) {
+      $(".excerpt-text").removeClass(`active${y * multiplicityCSSClasses}`);
+      $(".excerpt-sentence").removeClass(`active${y * multiplicityCSSClasses}`);
+    }
     $(".excerpt-text").removeClass("active-fast");
     $(".excerpt-text").addClass("active-remove");
+    $(".excerpt-sentence").removeClass("active-fast");
+    $(".excerpt-sentence").addClass("active-remove");
     return;
   };
 
