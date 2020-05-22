@@ -141,6 +141,7 @@ $(document).ready(function () {
       sentenceRuInHTML = addWordInRuSentence(count);
       replaceSentences(count, sentenceEnInHTML, sentenceRuInHTML);
       highlightWordsOnHover();
+      showTranslateWordOnClick();
     }
   };
 
@@ -279,6 +280,19 @@ $(document).ready(function () {
     $(".word-en").hover(function () {
       wordId = $(this).attr("id");
       $(`#${wordId}.word-ru`).toggleClass("markup");
+    });
+  };
+
+  showTranslateWordOnClick = function () {
+    let wordText;
+    $(".word-en").click(function () {
+      wordText = $(this)
+        .text()
+        .toLowerCase()
+        .replace(/[^a-z]/g, "");
+      $.getJSON(`/send_word/${wordText}`, function (result) {
+        alert(result);
+      });
     });
   };
 

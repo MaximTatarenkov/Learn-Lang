@@ -28,10 +28,6 @@
   content: "";
   bottom: -1px;
 }
-/* .excerpt-text.active:before {
-  transition: width 1.85s linear;
-  width: 100%;
-} */
 .excerpt-text.active-remove:before {
   width: 0%;
   transition: initial;
@@ -52,10 +48,6 @@
   content: "";
   bottom: -1px;
 }
-/* .excerpt-sentence.active:before {
-  transition: width 1.85s linear;
-  width: 100%;
-} */
 .excerpt-sentence.active-remove:before {
   width: 0%;
   transition: initial;

@@ -2,7 +2,7 @@ from flask import render_template, jsonify, send_from_directory
 from flask_login import login_required
 
 from config import Config
-from web_english.models import Content
+from web_english.models import Content, Word
 from web_english.text.maping_text import create_name, Recognizer
 
 
@@ -36,6 +36,13 @@ def send_excerpts_sentences_murkups(text_id):
         "excerpts_for_sentences": excerpts_for_sentences
     }
     return jsonify(sending)
+
+
+@login_required
+def send_word(word):
+    current_word = Word.query.filter_by(word=word).first()
+    translations_for_click = current_word.translations_for_click
+    return jsonify(translations_for_click)
 
 
 @login_required

@@ -1,29 +1,13 @@
+import unicodedata
 import re
 import requests
 
 from fuzzywuzzy import fuzz
+from ponstrans import translate
 
 from config import Config
 from web_english import db, celery
 from web_english.models import Word, Translation, Content
-
-
-@celery.task
-def translation_start(title_text):
-    content = Content.query.filter_by(title_text=title_text).first()
-    text_en = content.text_en
-    split_text = split_clean_text(text_en)
-    for word in split_text:
-        check_database = Word.query.filter_by(word=word).first()
-        if not check_database:
-            translation = translation_word(word)
-            if translation:
-                save = Word(word=word,
-                            translation_word=translation)
-                db.session.add(save)
-    db.session.commit()
-    text_id = content.id
-    translation_in_context(text_id)
 
 
 def split_clean_text(text):
@@ -32,7 +16,7 @@ def split_clean_text(text):
     return split_text
 
 
-def translation_word(word):
+def translation_word_yandex(word):
     params = {
         "key": Config.DICTIONARY_KEY,
         "lang": "en-ru",
@@ -42,43 +26,16 @@ def translation_word(word):
     response = requests.post(url, params=params)
     translated_text = response.json()
     if translated_text.get("def"):
-        translation = {}
+        translation = []
         for w in translated_text.get("def"):
-            if w.get('pos') and w.get('pos') != "foreign word":
-                part_of_speech = w['pos']
-                translation[part_of_speech] = []
-                for word in w['tr']:
-                    translation[part_of_speech].append(word['text'])
-                    if word.get('syn'):
-                        for word_syn in word['syn']:
-                            translation[part_of_speech].append(
-                                word_syn['text'])
+            for word in w['tr']:
+                translation.append(word['text'])
+                if word.get('syn'):
+                    for word_syn in word['syn']:
+                        translation.append(
+                            word_syn['text'])
         return translation
     return False
-
-
-def translation_in_context(text_id):
-    content = Content.query.get(text_id)
-    english_sentences = re.split(r'[.!?;]', content.text_en)
-    russian_sentences = re.split(r'[.!?;]', content.text_ru)
-    count_sentence = 0
-    count_word_in_en_sentence = 0
-    for en_sentence in english_sentences:
-        split_en_sentence = split_clean_text(en_sentence)
-        split_ru_sentence = split_clean_text(russian_sentences[count_sentence])
-        for en_word in split_en_sentence:
-            translation_word_dict = Word.query.filter_by(word=en_word).first()
-            if translation_word_dict:
-                translation_word_value = translation_word_dict.translation_word.values()
-                word_translations = []
-                for w in translation_word_value:
-                    word_translations += w
-                saving_comparison_results(word_translations, split_ru_sentence,
-                                          en_word, text_id, count_sentence,
-                                          count_word_in_en_sentence)
-            count_word_in_en_sentence += 1
-        count_word_in_en_sentence = 0
-        count_sentence += 1
 
 
 def saving_comparison_results(word_translations, split_ru_sentence,
@@ -98,9 +55,110 @@ def saving_comparison_results(word_translations, split_ru_sentence,
                                    )
                 db.session.add(save)
                 count_word_in_ru_sentence = 0
-                # split_ru_sentence.remove(russian_word)
                 break
             count_word_in_ru_sentence += 1
         if fuzzy > 70:
             break
     db.session.commit()
+
+
+@celery.task
+def translation_start(title_text):
+    content = Content.query.filter_by(title_text=title_text).first()
+    text_en = content.text_en
+    split_text = split_clean_text(text_en)
+    for word in split_text:
+        check_database = Word.query.filter_by(word=word).first()
+        if not check_database:
+            translations_pons = translation_word_pons(word)
+            translations_yandex = translation_word_yandex(word)
+            if translations_pons or translations_yandex:
+                translations_for_click = create_translations_for_click(
+                    word, translations_pons, translations_yandex)
+                translations_for_highlight = create_translations_for_highlight(
+                    word, translations_for_click)
+                save = Word(word=word,
+                            translations_for_click=translations_for_click,
+                            translations_for_highlight=translations_for_highlight)
+                db.session.add(save)
+    db.session.commit()
+    text_id = content.id
+    translation_in_context(text_id)
+
+
+def translation_word_pons(word):
+    translation = translate(
+        word=word, source_language="en", target_language="ru")
+    if translation:
+        return translation
+    return False
+
+
+def create_translations_for_highlight(word, translations_for_click):
+    translations_for_highlight = {"translations": []}
+    for translation in translations_for_click["translations"]:
+        if translation["en"] == word and not (" " in translation["ru"]):
+            translations_for_highlight["translations"].append([
+                translation["ru"]])
+    return translations_for_highlight
+
+
+def create_translations_for_click(word, translations_pons, translations_yandex):
+    translations_for_click = {"translations": []}
+    if translations_pons:
+        for translation_po in translations_pons:
+            check = len(re.findall(rf"\b{word}\b", translation_po["source"]))
+            if check >= 1:
+                cleaned_en_string = re.sub(
+                    r'-', ' ', translation_po["source"])
+                without_accent = strip_accents(translation_po["target"])
+                cleaned_ru_string = re.sub(
+                    r'[a-z]', '', without_accent)
+                cleaned_ru_string = re.sub(
+                    r'\bмн\b', '', cleaned_ru_string)
+                cleaned_ru_string = re.sub(
+                    r'  ', ' ', cleaned_ru_string)
+                cleaned_ru_string = re.sub(
+                    r' ,', ',', cleaned_ru_string).strip()
+                translations_for_click['translations'].append(
+                    {"en": cleaned_en_string, "ru": cleaned_ru_string})
+    if translations_yandex:
+        for translation_ya in translations_yandex:
+            translation_for_comparison = {"en": word, "ru": translation_ya}
+            if translation_for_comparison not in translations_for_click['translations']:
+                translations_for_click['translations'].append(
+                    {"en": word, "ru": translation_ya})
+    return translations_for_click
+
+
+def strip_accents(string):
+    without_accent = ''
+    for w in string:
+        if unicodedata.category(w) != 'Mn':
+            without_accent += w
+    return without_accent
+
+
+def translation_in_context(text_id):
+    content = Content.query.get(text_id)
+    english_sentences = re.split(r'[.!?;]', content.text_en)
+    russian_sentences = re.split(r'[.!?;]', content.text_ru)
+    count_sentence = 0
+    count_word_in_en_sentence = 0
+    for en_sentence in english_sentences:
+        split_en_sentence = split_clean_text(en_sentence)
+        split_ru_sentence = split_clean_text(russian_sentences[count_sentence])
+        for en_word in split_en_sentence:
+            translation_word_dict = Word.query.filter_by(word=en_word).first()
+            if translation_word_dict:
+                translation_word_value = translation_word_dict.translations_for_highlight[
+                    'translations']
+                word_translations = []
+                for word in translation_word_value:
+                    word_translations += word
+                saving_comparison_results(word_translations, split_ru_sentence,
+                                          en_word, text_id, count_sentence,
+                                          count_word_in_en_sentence)
+            count_word_in_en_sentence += 1
+        count_word_in_en_sentence = 0
+        count_sentence += 1
