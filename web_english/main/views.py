@@ -42,7 +42,27 @@ def send_excerpts_sentences_murkups(text_id):
 def send_word(word):
     current_word = Word.query.filter_by(word=word).first()
     translations_for_click = current_word.translations_for_click
-    return jsonify(translations_for_click)
+    sorted_translations = {"translations": {
+        "translation_of_word": [], "translation_in_context": []}}
+    for translation in translations_for_click["translations"]:
+        split_translation_en = translation["en"].split()
+        split_translation_ru = translation["ru"].split()
+        if len(split_translation_ru) >= 1 and len(split_translation_en) == 1:
+            sorted_translations["translations"]["translation_of_word"].append(
+                translation)
+    for translation in translations_for_click["translations"]:
+        split_translation_en = translation["en"].split()
+        split_translation_ru = translation["ru"].split()
+        if len(split_translation_ru) == 1 and len(split_translation_en) > 1:
+            sorted_translations["translations"]["translation_in_context"].append(
+                translation)
+    for translation in translations_for_click["translations"]:
+        split_translation_en = translation["en"].split()
+        split_translation_ru = translation["ru"].split()
+        if len(split_translation_en) > 1 and len(split_translation_ru) > 1:
+            sorted_translations["translations"]["translation_in_context"].append(
+                translation)
+    return jsonify(sorted_translations)
 
 
 @login_required
