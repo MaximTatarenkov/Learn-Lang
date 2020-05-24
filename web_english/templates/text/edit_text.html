@@ -1,19 +1,22 @@
-{% extends "base.html" %}
-{% block content %}
+{% extends "base.html" %} {% block content %}
 <h1>{{ title_page }}</h1>
-<form action="{{ form_action }}" method="POST">            
-    {{ form.hidden_tag() }}
-    <ol>
-        <div class='form-group'>
-            {% for chunk in merged_chunks %}
-                <li>
-                    Оригинал: {{ chunk[0] }}<br>
-                    {{ form.chunk_recognized.label }}
-                    {{ form.chunk_recognized(value=chunk[1]) }}
-                </li>
-            {% endfor %}
-        </div>
-    </ol>
-    {{ form.submit()  }}
+<form action="{{ form_action }}" method="POST">
+  {{ form.hidden_tag() }}
+  <ol>
+    <div class="form-group">
+      {% for chunk in merged_chunks %}
+      <li>
+        Оригинал: {{ chunk[0] }}<br />
+        {{ form.chunk_recognized.label }} {{
+        form.chunk_recognized(value=chunk[1]) }}
+        <audio
+          src="{{ url_for('text.serve_audio', text_id=content.id, count=chunk[2]) }}"
+          controls
+        ></audio>
+      </li>
+      {% endfor %}
+    </div>
+  </ol>
+  {{ form.submit() }}
 </form>
 {% endblock %}

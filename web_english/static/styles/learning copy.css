@@ -1,0 +1,225 @@
+.container.text {
+  background: #c5cbcc;
+  min-width: 900px;
+  max-width: 900px;
+  max-height: 350px;
+  overflow: auto;
+  margin-bottom: 20px;
+  font-size: 19px;
+  font-family: "Times New Roman", Times, serif;
+}
+#text-sentence-en {
+  font-size: 25px;
+  font-family: "Times New Roman", Times, serif;
+}
+#text-sentence-ru {
+  font-size: 25px;
+  font-family: "Times New Roman", Times, serif;
+}
+.excerpt-text {
+  position: relative;
+}
+.excerpt-text:before {
+  position: absolute;
+  height: 1px;
+  width: 0%;
+  left: 0;
+  background: black;
+  content: "";
+  bottom: -1px;
+}
+.excerpt-text.active-remove:before {
+  width: 0%;
+  transition: initial;
+}
+.excerpt-text.active-fast:before {
+  width: 100%;
+  transition: initial;
+}
+.excerpt-sentence {
+  position: relative;
+}
+.excerpt-sentence:before {
+  position: absolute;
+  height: 1px;
+  width: 0%;
+  left: 0;
+  background: black;
+  content: "";
+  bottom: -1px;
+}
+.excerpt-sentence.active-remove:before {
+  width: 0%;
+  transition: initial;
+}
+.excerpt-sentence.active-fast:before {
+  width: 100%;
+  transition: initial;
+}
+.word-en:hover {
+  text-decoration: none;
+  background: #1c6c7a;
+  color: #fff;
+  cursor: pointer;
+}
+.word-en {
+  color: black;
+}
+.word-ru:hover {
+  background: #1c6c7a;
+  color: #fff;
+  cursor: pointer;
+}
+.markup {
+  background: #1c6c7a;
+  color: #fff;
+  cursor: pointer;
+}
+
+.excerpt-text.active2:before {
+  transition: width 0.2s linear;
+  width: 100%;
+}
+.excerpt-text.active4:before {
+  transition: width 0.4s linear;
+  width: 100%;
+}
+.excerpt-text.active6:before {
+  transition: width 0.5s linear;
+  width: 100%;
+}
+.excerpt-text.active8:before {
+  transition: width 0.7s linear;
+  width: 100%;
+}
+.excerpt-text.active10:before {
+  transition: width 0.9s linear;
+  width: 100%;
+}
+.excerpt-text.active12:before {
+  transition: width 1.1s linear;
+  width: 100%;
+}
+.excerpt-text.active14:before {
+  transition: width 1.3s linear;
+  width: 100%;
+}
+.excerpt-text.active16:before {
+  transition: width 1.5s linear;
+  width: 100%;
+}
+.excerpt-text.active18:before {
+  transition: width 1.7s linear;
+  width: 100%;
+}
+.excerpt-text.active20:before {
+  transition: width 1.9s linear;
+  width: 100%;
+}
+.excerpt-sentence.active2:before {
+  transition: width 0.2s linear;
+  width: 100%;
+}
+.excerpt-sentence.active4:before {
+  transition: width 0.4s linear;
+  width: 100%;
+}
+.excerpt-sentence.active6:before {
+  transition: width 0.55s linear;
+  width: 100%;
+}
+.excerpt-sentence.active8:before {
+  transition: width 0.75s linear;
+  width: 100%;
+}
+.excerpt-sentence.active10:before {
+  transition: width 0.9s linear;
+  width: 100%;
+}
+.excerpt-sentence.active12:before {
+  transition: width 1.1s linear;
+  width: 100%;
+}
+.excerpt-sentence.active14:before {
+  transition: width 1.3s linear;
+  width: 100%;
+}
+.excerpt-sentence.active16:before {
+  transition: width 1.5s linear;
+  width: 100%;
+}
+.excerpt-sentence.active18:before {
+  transition: width 1.7s linear;
+  width: 100%;
+}
+.excerpt-sentence.active20:before {
+  transition: width 1.9s linear;
+  width: 100%;
+}
+/* #tracker {
+position: relative;
+width: 100%;
+}
+#progress-bar {
+width: 80%;
+margin-left: 2%;
+margin-bottom: 20px;
+margin-top: 20px;
+height: 10px;
+background: rgb(78, 76, 76);
+float: left;
+}
+#progress {
+background: rgb(180, 122, 34);
+height: 10px;
+display: inline-block;
+}
+#duration {
+position: absolute;
+top: 0;
+right: 10px;
+padding: 4px 8px;
+background: rgb(209, 204, 204);
+border-radius: 5px;
+} */
+
+#translation-word {
+  width: 500px;
+  height: 500px;
+  margin: 0 auto;
+  padding: 18px 9px;
+  border-radius: 4px;
+  background: #fafafa;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto;
+  display: none;
+  opacity: 0;
+  z-index: 38;
+  text-align: left;
+  overflow: auto;
+}
+#translation-word #translation-word-close {
+  width: 21px;
+  height: 21px;
+  position: absolute;
+  top: 1px;
+  right: 11px;
+  cursor: pointer;
+  display: block;
+  font-size: 29px;
+}
+#overlay {
+  z-index: 37;
+  position: fixed;
+  background-color: rgba(0, 0, 0, 0.7);
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  cursor: pointer;
+  display: none;
+}

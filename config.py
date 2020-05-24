@@ -31,21 +31,25 @@ class Config:
     FOLDER_ID = os.environ.get("FOLDER_ID_YANDEX")
     API_KEY = os.environ.get("API_KEY_YANDEX")
 
+    # Yandex dictionary
+    DICTIONARY_KEY = os.environ.get("YANDEX_DICTIONARY_KEY")
+
     # 3000 - это интервал в 3 секунды распознования текста. К этому числу мы будем
     # привязывать слова в оригинальном тексте.
-    INTERVAL = 3 * 1000
+    INTERVAL = 2 * 1000
 
     JSON_AS_ASCII = False
 
 
 class DevConfig(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(BASE_DIR, "dev.db")
+    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:1@127.0.0.1:5432/learn_lang'
 
 
 class ProductionConfig(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(BASE_DIR, "database.db")
+    SQLALCHEMY_DATABASE_URI = "sqlite:///" + \
+        os.path.join(BASE_DIR, "database.db")
 
 
 class TestConfig(Config):

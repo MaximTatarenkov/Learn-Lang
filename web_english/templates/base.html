@@ -1,55 +1,65 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
   <head>
     {% block head %}
     <title>{{ title }}</title>
     {% endblock %}
-    <link rel="stylesheet" 
-      href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" 
-      integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" 
-      crossorigin="anonymous">
-      <link href="http://faviconka.ru/ico/faviconka_ru_1237.png" rel="shortcut icon" type="image/x-icon" />
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+      integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk"
+      crossorigin="anonymous"
+    />
+    <link
+      href="{{ url_for('static', filename='favicon/favicon.ico') }}"
+      rel="shortcut icon"
+      type="image/x-icon"
+    />
   </head>
   <body>
     <nav class="navbar navbar-expand-lg bg-light">
-      <a class="navbar-brand" href="/">WE</a>
+      <a class="navbar-brand" href="/">LL</a>
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
           <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('main.learning_list') }}">Обучение</a>
+            <a class="nav-link" href="{{ url_for('main.learning_list') }}"
+              >Обучение</a
+            >
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('text.create') }}">Добавить текст</a>
+            <a class="nav-link" href="{{ url_for('text.create') }}"
+              >Добавить текст</a
+            >
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('text.texts_list') }}">Тексты для редактирования</a>
+            <a class="nav-link" href="{{ url_for('text.texts_list') }}"
+              >Тексты для редактирования</a
+            >
           </li>
         </ul>
         {% if current_user.is_authenticated %}
-            <span>Вы вошли как {{ current_user.username }}</span>
-            <a class="nav-link" href="{{ url_for('auth.logout') }}">Выйти</a>
+        <span>Вы вошли как {{ current_user.username }}</span>
+        <a class="nav-link" href="{{ url_for('auth.logout') }}">Выйти</a>
         {% elif not is_auth_page %}
-            <a class="nav-link" href="{{ url_for('auth.login') }}">Войти</a>
-            <a class="nav-link" href="{{ url_for('auth.register') }}">Регистрация</a>
-            <a class="nav-link" href="{{ url_for('auth.reset_password_request') }}">Забыли пароль?</a>
+        <a class="nav-link" href="{{ url_for('auth.login') }}">Войти</a>
+        <a class="nav-link" href="{{ url_for('auth.register') }}"
+          >Регистрация</a
+        >
+        <a class="nav-link" href="{{ url_for('auth.reset_password_request') }}"
+          >Забыли пароль?</a
+        >
         {% endif %}
       </div>
     </nav>
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div class="alert alert-warning" role="alert">
-            {% for message in messages %}
-                {{ message }}<br>
-            {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
-    <div id="content" class="container">
-        {% block content %}
-        Это базовый шаблон
-        {% endblock %}
+    {% with messages = get_flashed_messages() %} {% if messages %}
+    <div class="alert alert-warning" role="alert">
+      {% for message in messages %} {{ message }}<br />
+      {% endfor %}
     </div>
-    {% block js %}
-    {% endblock %}
+    {% endif %} {% endwith %}
+    <div id="content" class="container">
+      {% block content %} Это базовый шаблон {% endblock %}
+    </div>
+    {% block js %} {% endblock %}
   </body>
 </html>

@@ -7,7 +7,7 @@ from web_english import db
 
 
 def login():
-    title = "Авторизация"
+    title = "Авторизация | Learn Lang"
     form = LoginForm()
     return render_template(
         "auth/login.html",
@@ -33,7 +33,7 @@ def process_login():
 
 
 def register():
-    title = "Регистрация"
+    title = "Регистрация | Learn Lang"
     form = RegisterForm()
     return render_template(
         "auth/register.html",
@@ -51,7 +51,7 @@ def process_register():
         error = list(form.errors.values())
         flash(error[0][0])
         return redirect(url_for("auth.register"))
-    
+
     new_user = User(
         username=form.username.data,
         password=form.password.data,
@@ -93,7 +93,7 @@ def reset_password_request():
         flash("Инструкция по восстановлению пароля отправлена на ваш email")
         return redirect(url_for("auth.login"))
     return render_template("auth/reset_password_request.html",
-                           title="Сброс пароля", form=form)
+                           title="Сброс пароля | Learn Lang", form=form)
 
 
 def reset_password(token):
