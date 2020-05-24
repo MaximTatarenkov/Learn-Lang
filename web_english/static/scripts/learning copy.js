@@ -4,6 +4,7 @@ $(document).ready(function () {
     second = 0,
     arrayOfDurations,
     currentExcerpt,
+    sentenceCount,
     dataId = $("#text_en").attr("data-id"),
     url = "send_excerpts/" + dataId,
     itemT,
@@ -16,8 +17,8 @@ $(document).ready(function () {
     excerptsForSentences,
     canvas = document.createElement("canvas"),
     ctx = canvas.getContext("2d");
-  // currentBack,
-  // currentForvard;
+  // TODO currentBack,
+  // TODO currentForvard;
   const audio = new Audio(AUDIO),
     CONTEINERWIDTH = 830;
 
@@ -93,45 +94,44 @@ $(document).ready(function () {
   (function () {
     $(audio).bind("timeupdate", function () {
       second = parseFloat(audio.currentTime);
-      let excerptsLength = $(".excerpt-text").length,
-        i,
-        n;
-      for (i = 0; i < excerptsLength; i++) {
-        currentExcerpt = i;
-        if (
-          calculateExcerptTime(i) <= second &&
-          second < calculateExcerptTime(i + 1)
-        ) {
+      let excerptsLength = $(".excerpt-text").length;
+      for (let i = 0; i < excerptsLength; i++) {
+        if (second < calculateExcerptTime(i + 1) && !stopPlay) {
+          if (currentExcerpt !== i) {
+            currentExcerpt = i;
+          }
           break;
         }
       }
-      addClassesInText(i);
+      addClassesInText(currentExcerpt);
+
       for (n = 0; n < punctuationsTime.length; n++) {
-        if (punctuationsTime[n] <= second && second < punctuationsTime[n + 1]) {
+        if (second < punctuationsTime[n + 1]) {
+          if (sentenceCount !== n) {
+            sentenceCount = n;
+            addSentences(sentenceCount);
+          }
           break;
         }
       }
-      addSentences(n);
     });
   })();
 
   addClassesInText = function (count) {
+    excerptDuration = $(`.excerpt-text.exc${count}`).attr("data-duration");
     if (
       pause ||
       stopPlay ||
-      $(`.exc${count}`).hasClass("active") ||
+      $(`.exc${count}`).hasClass(`active${excerptDuration}`) ||
+      $(`.exc${count}`).hasClass(`active${excerptDuration - 2}`) ||
       !$(".excerpt-sentence").hasClass(`exc${count}`)
     ) {
       return;
     } else {
-      // console.log(second);
-      // console.log(calculateExcerptTime(currentExcerpt));
-      excerptDuration = $(`.excerpt-text.exc${count}`).attr("data-duration");
-      if (second % calculateExcerptTime(currentExcerpt > 0.1)) {
+      if (second % calculateExcerptTime(currentExcerpt) > 0.1) {
         excerptDuration -= 2;
       }
       itemT = document.querySelector(`.excerpt-text.exc${count}`);
-      console.log(itemT);
       itemT.classList.remove("active-remove");
       itemT.classList.add(`active${excerptDuration}`);
       itemS = document.querySelector(`.excerpt-sentence.exc${count}`);
@@ -372,18 +372,20 @@ $(document).ready(function () {
       currentBack = 0;
     }
     audio.currentTime = currentBack;
-    $(
-      `.excerpt-text.exc${currentExcerpt}.active${excerptDuration}:last`
-    ).addClass("active-remove");
-    $(
-      `.excerpt-text.exc${currentExcerpt}.active${excerptDuration}:last`
-    ).removeClass(`active${excerptDuration}`);
-    $(
-      `.excerpt-sentence.exc${currentExcerpt}.active${excerptDuration}:last`
-    ).addClass("active-remove");
-    $(
-      `.excerpt-sentence.exc${currentExcerpt}.active${excerptDuration}:last`
-    ).removeClass(`active${excerptDuration}`);
+    $(`.excerpt-text.exc${currentExcerpt}`).addClass("active-remove");
+    $(`.excerpt-text.exc${currentExcerpt}`).removeClass(
+      `active${excerptDuration}`
+    );
+    $(`.excerpt-text.exc${currentExcerpt}`).removeClass(
+      `active${excerptDuration - 2}`
+    );
+    $(`.excerpt-sentence.exc${currentExcerpt}`).addClass("active-remove");
+    $(`.excerpt-sentence.exc${currentExcerpt}`).removeClass(
+      `active${excerptDuration}`
+    );
+    $(`.excerpt-sentence.exc${currentExcerpt}`).removeClass(
+      `active${excerptDuration - 2}`
+    );
     return;
   };
 
@@ -444,6 +446,7 @@ $(document).ready(function () {
   });
 });
 
+// TODO
 //   (function () {
 //     $(audio).bind("timeupdate", function () {
 //       let s = parseInt(audio.currentTime % 60);

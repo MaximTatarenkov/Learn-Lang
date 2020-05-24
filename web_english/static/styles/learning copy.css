@@ -81,11 +81,11 @@
   width: 100%;
 }
 .excerpt-text.active4:before {
-  transition: width 0.35s linear;
+  transition: width 0.4s linear;
   width: 100%;
 }
 .excerpt-text.active6:before {
-  transition: width 0.55s linear;
+  transition: width 0.5s linear;
   width: 100%;
 }
 .excerpt-text.active8:before {
@@ -121,7 +121,7 @@
   width: 100%;
 }
 .excerpt-sentence.active4:before {
-  transition: width 0.35s linear;
+  transition: width 0.4s linear;
   width: 100%;
 }
 .excerpt-sentence.active6:before {
@@ -129,7 +129,7 @@
   width: 100%;
 }
 .excerpt-sentence.active8:before {
-  transition: width 0.7s linear;
+  transition: width 0.75s linear;
   width: 100%;
 }
 .excerpt-sentence.active10:before {
