@@ -2,8 +2,8 @@ $(document).ready(function () {
   let pause = false,
     stopPlay = true,
     second = 0,
-    arrayOfDurations,
     currentExcerpt,
+    sentenceCount,
     dataId = $("#text_en").attr("data-id"),
     url = "send_excerpts/" + dataId,
     itemT,
@@ -16,19 +16,18 @@ $(document).ready(function () {
     excerptsForSentences,
     canvas = document.createElement("canvas"),
     ctx = canvas.getContext("2d");
-  // currentBack,
-  // currentForvard;
+  // TODO currentBack,
+  // TODO currentForvard;
   const audio = new Audio(AUDIO),
     CONTEINERWIDTH = 830;
 
   (function (url) {
     $.getJSON(url, function (result) {
       excerptsForText = result.excerpts_for_text;
+      excerptsForSentences = result.excerpts_for_sentences;
       punctuationsTime = result.punctuations_time;
       translationMarkup = result.translation_markup;
       sentencesRuArray = result.sentences_ru;
-      excerptsForSentences = result.excerpts_for_sentences;
-      arrayOfDurations = createArrayOfDurations(excerptsForText);
       audio.currentTime = 0;
       composeText();
     });
@@ -82,7 +81,8 @@ $(document).ready(function () {
   };
 
   calculateExcerptTime = function (iteration) {
-    let slicedArrayOfDurations = arrayOfDurations.slice(0, iteration),
+    let arrayOfDurations = createArrayOfDurations(excerptsForText),
+      slicedArrayOfDurations = arrayOfDurations.slice(0, iteration),
       currentDuration = slicedArrayOfDurations.reduce(
         (acc, duration) => (acc += duration),
         0
@@ -93,39 +93,48 @@ $(document).ready(function () {
   (function () {
     $(audio).bind("timeupdate", function () {
       second = parseFloat(audio.currentTime);
-      let excerptsLength = $(".excerpt-text").length,
-        i,
-        n;
-      for (i = 0; i < excerptsLength; i++) {
-        currentExcerpt = i;
-        if (
-          calculateExcerptTime(i) <= second &&
-          second < calculateExcerptTime(i + 1)
-        ) {
+      let excerptsLength = $(".excerpt-text").length;
+      for (let i = 0; i < excerptsLength; i++) {
+        if (second <= calculateExcerptTime(i + 1) && !stopPlay && !pause) {
+          if (currentExcerpt !== i) {
+            currentExcerpt = i;
+          }
           break;
         }
       }
-      addClassesInText(i);
+      addClassesInText(currentExcerpt);
+
       for (n = 0; n < punctuationsTime.length; n++) {
-        if (punctuationsTime[n] <= second && second < punctuationsTime[n + 1]) {
+        if (second < punctuationsTime[n + 1]) {
+          if (sentenceCount !== n) {
+            sentenceCount = n;
+            addSentences(sentenceCount);
+          }
           break;
         }
       }
-      addSentences(n);
     });
   })();
 
   addClassesInText = function (count) {
+    let normalDuration = 2;
+    excerptDuration = $(`.excerpt-text.exc${count}`).attr("data-duration");
     if (
       pause ||
       stopPlay ||
-      $(`.exc${count}`).hasClass("active") ||
+      $(`.exc${count}`).hasClass(`active${excerptDuration}`) ||
+      $(`.exc${count}`).hasClass(`active${excerptDuration - 2}`) ||
+      $(`.exc${count}`).hasClass(`active${excerptDuration - 4}`) ||
       !$(".excerpt-sentence").hasClass(`exc${count}`)
     ) {
       return;
     } else {
+      if (0.1 <= second % calculateExcerptTime(currentExcerpt) < 0.3) {
+        excerptDuration -= normalDuration;
+      } else if (second % calculateExcerptTime(currentExcerpt) > 0.3) {
+        excerptDuration -= normalDuration * 2;
+      }
       itemT = document.querySelector(`.excerpt-text.exc${count}`);
-      excerptDuration = $(`.excerpt-text.exc${count}`).attr("data-duration");
       itemT.classList.remove("active-remove");
       itemT.classList.add(`active${excerptDuration}`);
       itemS = document.querySelector(`.excerpt-sentence.exc${count}`);
@@ -142,6 +151,7 @@ $(document).ready(function () {
       replaceSentences(count, sentenceEnInHTML, sentenceRuInHTML);
       highlightWordsOnHover();
       showTranslateWordOnClick();
+      closeTranslateWordOnClick();
     }
   };
 
@@ -222,13 +232,13 @@ $(document).ready(function () {
       inArray = excerptsForSentences[countSentences]["text"][countExcerpt];
     inArray.forEach((word, wordCount) => {
       if (excerptInHTML) {
-        excerptInHTML += `<span id=\"word${
+        excerptInHTML += `<a id=\"word${
           wordCount + wordsCountBefore
-        }\" class=\"word-en\"> ${word}</span>`;
+        }\" class=\"word-en\" href=\"#\"> ${word}</a>`;
       } else {
-        excerptInHTML = `<span id=\"word${
+        excerptInHTML = `<a id=\"word${
           wordCount + wordsCountBefore
-        }\" class=\"word-en\">${word}</span>`;
+        }\" class=\"word-en\" href=\"#\">${word}</a>`;
       }
     });
     return excerptInHTML;
@@ -284,14 +294,41 @@ $(document).ready(function () {
   };
 
   showTranslateWordOnClick = function () {
-    let wordText;
-    $(".word-en").click(function () {
+    let wordText, translationWord, popText;
+    $(".word-en").click(function (event) {
+      popText = "";
+      event.preventDefault();
       wordText = $(this)
         .text()
         .toLowerCase()
         .replace(/[^a-z]/g, "");
       $.getJSON(`/send_word/${wordText}`, function (result) {
-        alert(result);
+        translationWord = result;
+        translationWord["translations"]["translation_of_word"].forEach(
+          (translation, i) => {
+            if (i == 0) {
+              popText += `<span class=\"pop-translation\">en: ${translation["en"]} ru: ${translation["ru"]}</span>`;
+            } else {
+              popText += `<br><span class=\"pop-translation\">en: ${translation["en"]} ru: ${translation["ru"]}</span>`;
+            }
+          }
+        );
+        $("#pop_text").replaceWith(`<div id=\"pop_text\">${popText}</div>`);
+      });
+
+      $("#overlay").fadeIn(297, function () {
+        $("#translation-word")
+          .css("display", "block")
+          .animate({ opacity: 1 }, 198);
+      });
+    });
+  };
+
+  closeTranslateWordOnClick = function () {
+    $("#translation-word-close, #overlay").click(function () {
+      $("#translation-word").animate({ opacity: 0 }, 198, function () {
+        $(this).css("display", "none");
+        $("#overlay").fadeOut(297);
       });
     });
   };
@@ -324,7 +361,8 @@ $(document).ready(function () {
   document.getElementById("play").addEventListener("click", playButtonHandler);
 
   set_pause = function () {
-    let currentDuration = calculateExcerptTime(currentExcerpt);
+    let currentDuration = calculateExcerptTime(currentExcerpt),
+      currentBack;
     if (stopPlay) {
       return;
     }
@@ -338,18 +376,26 @@ $(document).ready(function () {
       currentBack = 0;
     }
     audio.currentTime = currentBack;
-    $(
-      `.excerpt-text.exc${currentExcerpt}.active${excerptDuration}:last`
-    ).addClass("active-remove");
-    $(
-      `.excerpt-text.exc${currentExcerpt}.active${excerptDuration}:last`
-    ).removeClass(`active${excerptDuration}`);
-    $(
-      `.excerpt-sentence.exc${currentExcerpt}.active${excerptDuration}:last`
-    ).addClass("active-remove");
-    $(
-      `.excerpt-sentence.exc${currentExcerpt}.active${excerptDuration}:last`
-    ).removeClass(`active${excerptDuration}`);
+    $(`.excerpt-text.exc${currentExcerpt}`).addClass("active-remove");
+    $(`.excerpt-text.exc${currentExcerpt}`).removeClass(
+      `active${excerptDuration}`
+    );
+    $(`.excerpt-text.exc${currentExcerpt}`).removeClass(
+      `active${excerptDuration - 2}`
+    );
+    $(`.excerpt-text.exc${currentExcerpt}`).removeClass(
+      `active${excerptDuration - 4}`
+    );
+    $(`.excerpt-sentence.exc${currentExcerpt}`).addClass("active-remove");
+    $(`.excerpt-sentence.exc${currentExcerpt}`).removeClass(
+      `active${excerptDuration}`
+    );
+    $(`.excerpt-sentence.exc${currentExcerpt}`).removeClass(
+      `active${excerptDuration - 2}`
+    );
+    $(`.excerpt-sentence.exc${currentExcerpt}`).removeClass(
+      `active${excerptDuration - 4}`
+    );
     return;
   };
 
@@ -392,6 +438,58 @@ $(document).ready(function () {
 
   document.getElementById("stop").addEventListener("click", stopButtonHandler);
 
+  set_back = function () {
+    let previousSentenceTime,
+      currentClass,
+      classDuration,
+      timeDuration,
+      numberOfExcerptsInSentence;
+    if (stopPlay || punctuationsTime.indexOf(second) == 0) {
+      return;
+    } else if (pause) {
+      if (punctuationsTime.indexOf(second) !== -1) {
+        previousSentenceTime =
+          punctuationsTime[punctuationsTime.indexOf(second) - 1];
+        numberOfExcerptsInSentence =
+          excerptsForText[sentenceCount - 1]["durations"].length;
+        audio.currentTime = previousSentenceTime;
+        for (let i = 0; i < numberOfExcerptsInSentence; i++) {
+          currentClass = $(`.excerpt-text.exc${currentExcerpt - (i + 1)}`).attr(
+            "class"
+          );
+          classDuration = /active\d+/.exec(currentClass);
+          $(`.excerpt-text.exc${currentExcerpt - (i + 1)}`).addClass(
+            "active-remove"
+          );
+          $(`.excerpt-text.exc${currentExcerpt - (i + 1)}`).removeClass(
+            classDuration
+          );
+        }
+        currentExcerpt -= numberOfExcerptsInSentence;
+      } else {
+        currentExcerpt -= 1;
+        currentClass = $(`.excerpt-text.exc${currentExcerpt}`).attr("class");
+        classDuration = /active\d+/.exec(currentClass);
+        timeDuration =
+          $(`.excerpt-text.exc${currentExcerpt}`).attr("data-duration") / 10;
+        audio.currentTime -= timeDuration;
+        $(`.excerpt-text.exc${currentExcerpt}`).addClass("active-remove");
+        $(`.excerpt-text.exc${currentExcerpt}`).removeClass(classDuration);
+        $(`.excerpt-sentence.exc${currentExcerpt}`).addClass("active-remove");
+        $(`.excerpt-sentence.exc${currentExcerpt}`).removeClass(classDuration);
+      }
+    } else {
+      set_pause();
+    }
+  };
+
+  backButtonHandler = function () {
+    set_back();
+    return;
+  };
+
+  document.getElementById("back").addEventListener("click", backButtonHandler);
+
   $("#volume").change(function () {
     audio.volume = parseFloat(this.value / 10);
   });
@@ -410,6 +508,7 @@ $(document).ready(function () {
   });
 });
 
+// TODO
 //   (function () {
 //     $(audio).bind("timeupdate", function () {
 //       let s = parseInt(audio.currentTime % 60);
@@ -425,23 +524,6 @@ $(document).ready(function () {
 //       $("#progress").css("width", value + "%");
 //     });
 //   })();
-
-// set_back = function () {
-//   if (stopPlay) {
-//     return;
-//   } else if (pause) {
-//     audio.currentTime -= duration;
-//     if ($(".active-remove:first").prev(".active")) {
-//       $(".excerpt.active:last").addClass("active-remove");
-//       $(".excerpt.active:last").removeClass("active");
-//     } else {
-//       $(".excerpt.active-fast:last").addClass("active-remove");
-//       $(".excerpt.active-fast:last").removeClass("active-fast");
-//     }
-//   } else {
-//     set_pause();
-//   }
-// };
 
 // set_forvard = function () {
 //   if (stopPlay) {
@@ -469,19 +551,10 @@ $(document).ready(function () {
 //   }
 // };
 
-// backButtonHandler = function () {
-//   set_back();
-//   return;
-// };
-
 // forvardButtonHandler = function () {
 //   set_forvard();
 //   return;
 // };
-
-// document
-//   .getElementById("back")
-//   .addEventListener("click", backButtonHandler);
 
 // document
 //   .getElementById("forvard")

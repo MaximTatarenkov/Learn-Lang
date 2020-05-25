@@ -21,13 +21,17 @@ def send_excerpts_sentences_murkups(text_id):
     content = Content.query.filter(Content.id == text_id).first()
     recognizer = Recognizer(content.title_text)
     excerpts = recognizer.compose_excerpts_for_sending(text_id)
-    punctuations_time = recognizer.find_punctuations_time(excerpts)
+    # punctuations_time = recognizer.find_punctuations_time(excerpts)
     translations = recognizer.compose_translation_markup(text_id)
     sentences_ru = recognizer.split_text_by_sentences(content.text_ru)
     excerpts_for_sentences = recognizer.compose_sentences_for_visualization(
         excerpts)
     excerpts_for_text = recognizer.compose_excerpts_for_text(
         excerpts_for_sentences)
+    punctuations_time = [0]
+    for excerpt in excerpts_for_sentences:
+        punctuations_time.append(
+            round((sum(excerpt["durations"]) / 10) + punctuations_time[-1], 1))
     sending = {
         "translation_markup": translations,
         "excerpts_for_text": excerpts_for_text,

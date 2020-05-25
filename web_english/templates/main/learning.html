@@ -13,7 +13,7 @@
 </div>
 <div id="overlay"></div>
 <div class="buttons_volume">
-  <!-- <button id="back">Back</button> -->
+  <button id="back">Back</button>
   <button id="play">Play</button>
   <button id="pause">Pause</button>
   <button id="stop">Stop</button>
@@ -28,12 +28,12 @@
 </div> -->
 {% endblock %} {% block js %}
 <script src="{{ url_for('static', filename='scripts/jquery-3.5.1.js') }}"></script>
-<script src="{{ url_for('static', filename='scripts/learning copy.js') }}"></script>
+<script src="{{ url_for('static', filename='scripts/learning.js') }}"></script>
 <script>
   let AUDIO = "{{ url_for('main.serve_audio', text_id=content.id) }}";
 </script>
 <link
   rel="stylesheet"
-  href="{{ url_for('static', filename='styles/learning copy.css') }}"
+  href="{{ url_for('static', filename='styles/learning.css') }}"
 />
 {% endblock %}
