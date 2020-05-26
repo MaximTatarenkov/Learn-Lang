@@ -16,8 +16,6 @@ $(document).ready(function () {
     excerptsForSentences,
     canvas = document.createElement("canvas"),
     ctx = canvas.getContext("2d");
-  // TODO currentBack,
-  // TODO currentForvard;
   const audio = new Audio(AUDIO),
     CONTEINERWIDTH = 830;
 
@@ -464,6 +462,9 @@ $(document).ready(function () {
           $(`.excerpt-text.exc${currentExcerpt - (i + 1)}`).removeClass(
             classDuration
           );
+          $(`.excerpt-text.exc${currentExcerpt - (i + 1)}`).removeClass(
+            "active-fast"
+          );
         }
         currentExcerpt -= numberOfExcerptsInSentence;
       } else {
@@ -475,18 +476,112 @@ $(document).ready(function () {
         audio.currentTime -= timeDuration;
         $(`.excerpt-text.exc${currentExcerpt}`).addClass("active-remove");
         $(`.excerpt-text.exc${currentExcerpt}`).removeClass(classDuration);
+        $(`.excerpt-text.exc${currentExcerpt}`).removeClass("active-fast");
         $(`.excerpt-sentence.exc${currentExcerpt}`).addClass("active-remove");
         $(`.excerpt-sentence.exc${currentExcerpt}`).removeClass(classDuration);
+        $(`.excerpt-sentence.exc${currentExcerpt}`).removeClass("active-fast");
       }
     } else {
       set_pause();
     }
   };
 
+  // addRemoveClasses = function (numberOfExcerpt, addCl, removeCl) {
+  //   $(`.excerpt-text.exc${numberOfExcerpt}`).addClass(addCl);
+  //   $(`.excerpt-sentence.exc${numberOfExcerpt}`).addClass(addCl);
+  //   $(`.excerpt-text.exc${numberOfExcerpt}`).removeClass(removeCl);
+  //   $(`.excerpt-sentence.exc${numberOfExcerpt}`).removeClass(removeCl);
+  // };
+
   backButtonHandler = function () {
     set_back();
     return;
   };
+
+  set_forvard = function () {
+    let timeDuration,
+      nextSentenceTime,
+      numberOfExcerptsInSentence,
+      nextExcerptTime;
+    if (stopPlay) {
+      stopPlay = false;
+      pause = true;
+      timeDuration = $(`.excerpt-text.exc0`).attr("data-duration") / 10;
+      audio.currentTime = timeDuration;
+      currentExcerpt = 1;
+      $(`.excerpt-text.exc0`).addClass("active-fast");
+      $(`.excerpt-text.exc0`).removeClass("active-remove");
+      $(`.excerpt-sentence.exc0`).addClass("active-fast");
+      $(`.excerpt-sentence.exc0`).removeClass("active-remove");
+    } else if (pause) {
+      if (punctuationsTime.indexOf(second) !== -1) {
+        nextSentenceTime =
+          punctuationsTime[punctuationsTime.indexOf(second) + 1];
+        numberOfExcerptsInSentence =
+          excerptsForText[sentenceCount]["durations"].length;
+        audio.currentTime = nextSentenceTime;
+        for (let i = 0; i < numberOfExcerptsInSentence; i++) {
+          currentClass = $(`.excerpt-text.exc${currentExcerpt + i}`).attr(
+            "class"
+          );
+          classDuration = /active\d+/.exec(currentClass);
+          $(`.excerpt-text.exc${currentExcerpt + i}`).addClass("active-fast");
+          $(`.excerpt-text.exc${currentExcerpt + i}`).removeClass(
+            "active-remove"
+          );
+        }
+        currentExcerpt += numberOfExcerptsInSentence;
+      } else {
+        currentClass = $(`.excerpt-text.exc${currentExcerpt}`).attr("class");
+        classDuration = /active\d+/.exec(currentClass);
+        timeDuration =
+          $(`.excerpt-text.exc${currentExcerpt}`).attr("data-duration") / 10;
+        audio.currentTime += timeDuration;
+        $(`.excerpt-text.exc${currentExcerpt}`).addClass("active-fast");
+        $(`.excerpt-text.exc${currentExcerpt}`).removeClass("active-remove");
+        $(`.excerpt-sentence.exc${currentExcerpt}`).addClass("active-fast");
+        $(`.excerpt-sentence.exc${currentExcerpt}`).removeClass(
+          "active-remove"
+        );
+        currentExcerpt += 1;
+      }
+    } else {
+      // set_pause();
+      // forvard = function () {
+      nextExcerptTime = calculateExcerptTime(currentExcerpt + 1);
+      pause = true;
+      audio.pause();
+      audio.currentTime = nextExcerptTime;
+      currentClass = $(`.excerpt-text.exc${currentExcerpt}`).attr("class");
+      classDuration = /active\d+/.exec(currentClass);
+      $(`.excerpt-text.exc${currentExcerpt}`).removeClass(classDuration);
+      $(`.excerpt-sentence.exc${currentExcerpt}`).removeClass(classDuration);
+      setTimeout(addActiveFast, 25);
+      // $(`.excerpt-text.exc${currentExcerpt}`).addClass("active-fast");
+      // $(`.excerpt-sentence.exc${currentExcerpt}`).addClass("active-fast");
+      // $(`.excerpt-text.exc${currentExcerpt}`).removeClass("active-remove");
+      // $(`.excerpt-sentence.exc${currentExcerpt}`).removeClass(
+      //   "active-remove"
+      // );
+      // currentExcerpt += 1;
+      // };
+    }
+  };
+
+  addActiveFast = function () {
+    $(`.excerpt-text.exc${currentExcerpt}`).addClass("active-fast");
+    $(`.excerpt-sentence.exc${currentExcerpt}`).addClass("active-fast");
+    currentExcerpt += 1;
+  };
+
+  forvardButtonHandler = function () {
+    set_forvard();
+    return;
+  };
+
+  document
+    .getElementById("forvard")
+    .addEventListener("click", forvardButtonHandler);
 
   document.getElementById("back").addEventListener("click", backButtonHandler);
 
@@ -524,38 +619,3 @@ $(document).ready(function () {
 //       $("#progress").css("width", value + "%");
 //     });
 //   })();
-
-// set_forvard = function () {
-//   if (stopPlay) {
-//     stopPlay = false;
-//     pause = true;
-//     audio.currentTime += duration;
-//     // $(".active-remove:first").addClass("active-fast") ||
-//     $(".excerpt.active-remove:first").addClass("active-fast");
-//     $(".active-remove:first").removeClass("active-remove");
-//   } else if (pause) {
-//     audio.currentTime += duration;
-//     // if ($(".excerpt").hasClass("active-remove")) {
-//     $(".excerpt.active-remove:first").addClass("active-fast");
-//     $(".active-remove:first").removeClass("active-remove");
-//     // } else {
-//     //   $(".excerpt:first").addClass("active-fast");
-//     // };
-//   } else {
-//     $(".excerpt.active:last").addClass("active-fast");
-//     $(".excerpt.active:last").removeClass("active");
-//     currentForvard = duration - (audio.currentTime % duration);
-//     audio.currentTime += currentForvard;
-//     // $(".active-remove:first").prev(".active").addClass("active-fast");
-//     // $(".active-remove:first").prev(".active").removeClass("active");
-//   }
-// };
-
-// forvardButtonHandler = function () {
-//   set_forvard();
-//   return;
-// };
-
-// document
-//   .getElementById("forvard")
-//   .addEventListener("click", forvardButtonHandler);
