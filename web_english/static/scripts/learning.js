@@ -46,16 +46,22 @@ $(document).ready(function () {
   composeText = function () {
     ctx.font = "19px Times New Roman serif";
     let stitchLength = 0,
+      sentenceHTML,
       numberPreviousExcerpts;
     excerptsForText.forEach((sentence, countSentences) => {
       numberPreviousExcerpts = countPreviousExcerpts(
         countSentences,
         excerptsForText
       );
+      text_en.insertAdjacentHTML(
+        "beforeend",
+        `<a id=\"sentence${countSentences}\" class=\"sentence-in-text\" href=\"#\"></a>`
+      );
       sentence.text.forEach((excerpt, countExcerpt) => {
+        sentenceHTML = document.getElementById(`sentence${countSentences}`);
         stitchLength += ctx.measureText(excerpt).width;
         if (stitchLength > CONTEINERWIDTH) {
-          text_en.insertAdjacentHTML(
+          sentenceHTML.insertAdjacentHTML(
             "beforeend",
             `<br><span class=\"excerpt-text exc${
               numberPreviousExcerpts + countExcerpt
@@ -65,7 +71,7 @@ $(document).ready(function () {
           );
           stitchLength = ctx.measureText(excerpt).width;
         } else {
-          text_en.insertAdjacentHTML(
+          sentenceHTML.insertAdjacentHTML(
             "beforeend",
             `<span class=\"excerpt-text exc${
               numberPreviousExcerpts + countExcerpt
@@ -76,6 +82,7 @@ $(document).ready(function () {
         }
       });
     });
+    movingOnToSentence();
   };
 
   calculateExcerptTime = function (iteration) {
@@ -294,6 +301,7 @@ $(document).ready(function () {
   showTranslateWordOnClick = function () {
     let wordText, translationWord, popText;
     $(".word-en").click(function (event) {
+      set_pause();
       popText = "";
       event.preventDefault();
       wordText = $(this)
@@ -330,6 +338,32 @@ $(document).ready(function () {
       });
     });
   };
+
+  movingOnToSentence = function () {
+    $(".sentence-in-text").click(function (event) {
+      let countThisSentence, idThisSentence, sentenceTime;
+      event.preventDefault();
+      idThisSentence = $(this).attr("id");
+      countThisSentence = /\d+/.exec(idThisSentence);
+      sentenceTime = punctuationsTime[countThisSentence[0]];
+      if (sentenceTime > second) {
+      }
+      audio.currentTime = sentenceTime;
+    });
+  };
+
+  // nextSentenceTime =
+  // punctuationsTime[punctuationsTime.indexOf(second) + 1];
+  numberOfExcerptsInSentence =
+    excerptsForText[sentenceCount]["durations"].length;
+  // audio.currentTime = nextSentenceTime;
+  for (let i = 0; i < numberOfExcerptsInSentence; i++) {
+    currentClass = $(`.excerpt-text.exc${currentExcerpt + i}`).attr("class");
+    classDuration = /active\d+/.exec(currentClass);
+    $(`.excerpt-text.exc${currentExcerpt + i}`).addClass("active-fast");
+    $(`.excerpt-text.exc${currentExcerpt + i}`).removeClass("active-remove");
+  }
+  currentExcerpt += numberOfExcerptsInSentence;
 
   playFromBeginning = function () {
     pause = false;
@@ -396,6 +430,36 @@ $(document).ready(function () {
     );
     return;
   };
+
+  $(document).keydown(function (e) {
+    if (e.which == 32) {
+      if (stopPlay) {
+        playFromBeginning();
+      } else if (!pause && !stopPlay) {
+        set_pause();
+      } else {
+        resumePlaying();
+      }
+    }
+  });
+
+  $(document).keydown(function (e) {
+    if (e.which == 37) {
+      set_back();
+    }
+  });
+
+  $(document).keydown(function (e) {
+    if (e.which == 39) {
+      set_forvard();
+    }
+  });
+
+  $(document).keydown(function (e) {
+    if (e.which == 40) {
+      stop_playing();
+    }
+  });
 
   pauseButtonHandler = function () {
     if (!pause) {
@@ -486,13 +550,6 @@ $(document).ready(function () {
     }
   };
 
-  // addRemoveClasses = function (numberOfExcerpt, addCl, removeCl) {
-  //   $(`.excerpt-text.exc${numberOfExcerpt}`).addClass(addCl);
-  //   $(`.excerpt-sentence.exc${numberOfExcerpt}`).addClass(addCl);
-  //   $(`.excerpt-text.exc${numberOfExcerpt}`).removeClass(removeCl);
-  //   $(`.excerpt-sentence.exc${numberOfExcerpt}`).removeClass(removeCl);
-  // };
-
   backButtonHandler = function () {
     set_back();
     return;
@@ -546,8 +603,6 @@ $(document).ready(function () {
         currentExcerpt += 1;
       }
     } else {
-      // set_pause();
-      // forvard = function () {
       nextExcerptTime = calculateExcerptTime(currentExcerpt + 1);
       pause = true;
       audio.pause();
@@ -557,14 +612,6 @@ $(document).ready(function () {
       $(`.excerpt-text.exc${currentExcerpt}`).removeClass(classDuration);
       $(`.excerpt-sentence.exc${currentExcerpt}`).removeClass(classDuration);
       setTimeout(addActiveFast, 25);
-      // $(`.excerpt-text.exc${currentExcerpt}`).addClass("active-fast");
-      // $(`.excerpt-sentence.exc${currentExcerpt}`).addClass("active-fast");
-      // $(`.excerpt-text.exc${currentExcerpt}`).removeClass("active-remove");
-      // $(`.excerpt-sentence.exc${currentExcerpt}`).removeClass(
-      //   "active-remove"
-      // );
-      // currentExcerpt += 1;
-      // };
     }
   };
 
@@ -589,9 +636,9 @@ $(document).ready(function () {
     audio.volume = parseFloat(this.value / 10);
   });
 
-  audio.addEventListener("ended", function () {
-    setTimeout(stop_playing, 4000);
-  });
+  // audio.addEventListener("ended", function () {
+  //   setTimeout(stop_playing, 4000);
+  // });
 
   document.addEventListener("visibilitychange", function () {
     if (document.visibilityState !== "visible") {

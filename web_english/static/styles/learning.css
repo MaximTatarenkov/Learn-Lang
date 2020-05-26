@@ -56,6 +56,16 @@
   width: 100%;
   transition: initial;
 }
+.sentence-in-text {
+  text-decoration: none;
+  cursor: pointer;
+  color: black;
+}
+.sentence-in-text:hover {
+  text-decoration: none;
+  cursor: pointer;
+  color: rgb(179, 15, 157);
+}
 .word-en:hover {
   text-decoration: none;
   background: #1c6c7a;
