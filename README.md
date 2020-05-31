@@ -24,3 +24,5 @@ pip install -r requirements.txt
 export FLASK_APP=server.py && export FLASK_ENV=development && flask run
 ```
 Также нужно запустить Celery Worker и Redis
+Перейдите по ссылке:
+
