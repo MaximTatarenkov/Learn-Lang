@@ -3,7 +3,6 @@ import os
 import re
 
 from fuzzywuzzy import fuzz
-# from logmmse import logmmse_from_file
 from pydub import AudioSegment
 import requests
 
@@ -60,9 +59,6 @@ class Recognizer():
     def chunk_audiofile(self, title):
         folder_name = f'{Config.UPLOADED_AUDIOS_DEST}/{create_name(self.title)}'
         os.mkdir(folder_name)
-        # audiofile = f'{folder_name}.wav'
-        # logmmse_from_file(audiofile, output_file=f'{folder_name}1.wav')
-        # audio = AudioSegment.from_wav(f'{folder_name}1.wav')
         audiofile = f'{folder_name}.mp3'
         audio = AudioSegment.from_mp3(audiofile)
         length_audio = len(audio)
@@ -226,22 +222,30 @@ class Recognizer():
             split_excerpt = split_text[word_number_start:word_number_end]
             join_excerpt = " ".join(split_excerpt)
             excerpts.append(join_excerpt)
-        return excerpts
+        cleaned_excerpts = self.delete_last_empty_item(excerpts)
+        return cleaned_excerpts
 
-    def find_punctuations_time(self, excerpts):
-        punctuations_time = [0]
-        count = 0
-        for excerpt in excerpts:
-            if excerpt.find('.') != -1 or excerpt.find('!') != -1 or excerpt.find('?') != -1 or excerpt.find(';') != -1:
-                punctuation_indexes = self.search_punctuation_indexes(excerpt)
-                for punct_index in punctuation_indexes:
-                    interval_in_sec = Config.INTERVAL/1000
-                    punctuation_in_excerpt = (
-                        interval_in_sec / len(excerpt)) * punct_index
-                    punctuation_in_text = interval_in_sec * count + punctuation_in_excerpt
-                    punctuations_time.append(punctuation_in_text)
-            count += 1
-        return punctuations_time
+    def delete_last_empty_item(self, excerpts):
+        if excerpts[-1]:
+            return excerpts
+        else:
+            excerpts.pop(-1)
+            return self.delete_last_empty_item(excerpts)
+
+    # def find_punctuations_time(self, excerpts):
+    #     punctuations_time = [0]
+    #     count = 0
+    #     for excerpt in excerpts:
+    #         if excerpt.find('.') != -1 or excerpt.find('!') != -1 or excerpt.find('?') != -1 or excerpt.find(';') != -1:
+    #             punctuation_indexes = self.search_punctuation_indexes(excerpt)
+    #             for punct_index in punctuation_indexes:
+    #                 interval_in_sec = Config.INTERVAL/1000
+    #                 punctuation_in_excerpt = (
+    #                     interval_in_sec / len(excerpt)) * punct_index
+    #                 punctuation_in_text = interval_in_sec * count + punctuation_in_excerpt
+    #                 punctuations_time.append(punctuation_in_text)
+    #         count += 1
+    #     return punctuations_time
 
     def search_punctuation_indexes(self, excerpt):
         punctuation_indexes = []
