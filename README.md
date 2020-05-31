@@ -25,4 +25,4 @@ export FLASK_APP=server.py && export FLASK_ENV=development && flask run
 ```
 Также нужно запустить Celery Worker и Redis
 Перейдите по ссылке:
-
+- http://127.0.0.1:5000/
