@@ -1,13 +1,9 @@
 $(document).ready(function () {
   let pause = false,
     stopPlay = true,
-    second = 0,
+    currentTimeAudio = 0,
     currentExcerpt = 0,
     sentenceCount,
-    dataId = $("#text_en").attr("data-id"),
-    url = "send_excerpts/" + dataId,
-    itemT,
-    itemS,
     excerptDuration,
     excerptsForText,
     punctuationsTime,
@@ -19,7 +15,9 @@ $(document).ready(function () {
   const audio = new Audio(AUDIO),
     CONTEINERWIDTH = 830;
 
-  (function (url) {
+  (function () {
+    let dataId = $("#text_en").attr("data-id"),
+      url = "send_excerpts/" + dataId;
     $.getJSON(url, function (result) {
       excerptsForText = result.excerpts_for_text;
       excerptsForSentences = result.excerpts_for_sentences;
@@ -29,7 +27,7 @@ $(document).ready(function () {
       audio.currentTime = 0;
       composeText();
     });
-  })(url);
+  })();
 
   createArrayOfDurations = function (excerptsForText) {
     let durations = [],
@@ -97,10 +95,14 @@ $(document).ready(function () {
 
   (function () {
     $(audio).bind("timeupdate", function () {
-      second = parseFloat(audio.currentTime);
+      currentTimeAudio = parseFloat(audio.currentTime);
       let excerptsLength = $(".excerpt-text").length;
       for (let i = 0; i < excerptsLength; i++) {
-        if (second <= calculateExcerptTime(i + 1) && !stopPlay && !pause) {
+        if (
+          currentTimeAudio <= calculateExcerptTime(i + 1) &&
+          !stopPlay &&
+          !pause
+        ) {
           if (currentExcerpt !== i) {
             currentExcerpt = i;
           }
@@ -108,9 +110,8 @@ $(document).ready(function () {
         }
       }
       addClassesInText(currentExcerpt);
-
       for (n = 0; n < punctuationsTime.length; n++) {
-        if (second < punctuationsTime[n + 1]) {
+        if (currentTimeAudio < punctuationsTime[n + 1]) {
           if (sentenceCount !== n) {
             sentenceCount = n;
             addSentences(sentenceCount);
@@ -118,11 +119,29 @@ $(document).ready(function () {
           break;
         }
       }
+      startProgressBar();
     });
   })();
 
+  startProgressBar = function () {
+    let second, minute, value;
+    second = parseInt(audio.currentTime % 60);
+    minute = parseInt(audio.currentTime / 60) % 60;
+    value = 0;
+    if (second < 10) {
+      second = "0" + second;
+    }
+    $("#duration").html(`${minute}:${second}`);
+    if (audio.currentTime > 0) {
+      value = Math.floor((100 / audio.duration) * audio.currentTime);
+    }
+    $("#progress").css("width", value + "%");
+  };
+
   addClassesInText = function (count) {
-    let normalDuration = 2;
+    let normalDuration = 2,
+      itemS,
+      itemT;
     excerptDuration = $(`.excerpt-text.exc${count}`).attr("data-duration");
     if (
       pause ||
@@ -134,9 +153,16 @@ $(document).ready(function () {
     ) {
       return;
     } else {
-      if (0.1 <= second % calculateExcerptTime(currentExcerpt) < 0.3) {
+      if (
+        0.1 <=
+        currentTimeAudio % calculateExcerptTime(currentExcerpt) <
+        0.3
+      ) {
         excerptDuration -= normalDuration;
-      } else if (second % calculateExcerptTime(currentExcerpt) > 0.3) {
+      } else if (
+        currentTimeAudio % calculateExcerptTime(currentExcerpt) >
+        0.3
+      ) {
         excerptDuration -= normalDuration * 2;
       }
       itemT = document.querySelector(`.excerpt-text.exc${count}`);
@@ -366,7 +392,7 @@ $(document).ready(function () {
         }
         audio.currentTime = sentenceTime;
       } else if (pause) {
-        if (sentenceTime > second) {
+        if (sentenceTime > currentTimeAudio) {
           classOfSentence = $(`#sentence${sentenceCount}`)
             .find(".excerpt-text")
             .attr("class");
@@ -385,11 +411,11 @@ $(document).ready(function () {
             currentExcerpt += numberOfExcerptsInSentence;
           }
           audio.currentTime = sentenceTime;
-        } else if (sentenceTime < second) {
+        } else if (sentenceTime < currentTimeAudio) {
           moveBack(countThisSentence, sentenceTime);
         }
       } else {
-        if (sentenceTime > second) {
+        if (sentenceTime > currentTimeAudio) {
           pause = true;
           audio.pause();
           currentClass = $(`.excerpt-text.exc${currentExcerpt}`).attr("class");
@@ -404,7 +430,7 @@ $(document).ready(function () {
             countThisSentence,
             sentenceTime
           );
-        } else if (sentenceTime < second) {
+        } else if (sentenceTime < currentTimeAudio) {
           set_pause();
           moveBack(countThisSentence, sentenceTime);
         }
@@ -601,15 +627,15 @@ $(document).ready(function () {
       classDuration,
       timeDuration,
       numberOfExcerptsInSentence;
-    if (stopPlay || punctuationsTime.indexOf(second) == 0) {
+    if (stopPlay || punctuationsTime.indexOf(currentTimeAudio) == 0) {
       return;
     } else if (pause) {
-      if (punctuationsTime.indexOf(second) !== -1) {
-        if (second >= punctuationsTime[punctuationsTime.length - 1]) {
+      if (punctuationsTime.indexOf(currentTimeAudio) !== -1) {
+        if (currentTimeAudio >= punctuationsTime[punctuationsTime.length - 1]) {
           sentenceCount += 1;
         }
         previousSentenceTime =
-          punctuationsTime[punctuationsTime.indexOf(second) - 1];
+          punctuationsTime[punctuationsTime.indexOf(currentTimeAudio) - 1];
         numberOfExcerptsInSentence =
           excerptsForText[sentenceCount - 1]["durations"].length;
         for (let i = 0; i < numberOfExcerptsInSentence; i++) {
@@ -654,7 +680,7 @@ $(document).ready(function () {
   };
 
   set_forvard = function () {
-    if (second >= punctuationsTime[punctuationsTime.length - 1]) {
+    if (currentTimeAudio >= punctuationsTime[punctuationsTime.length - 1]) {
       return;
     }
     let timeDuration,
@@ -672,9 +698,9 @@ $(document).ready(function () {
       $(`.excerpt-sentence.exc0`).addClass("active-fast");
       $(`.excerpt-sentence.exc0`).removeClass("active-remove");
     } else if (pause) {
-      if (punctuationsTime.indexOf(second) !== -1) {
+      if (punctuationsTime.indexOf(currentTimeAudio) !== -1) {
         nextSentenceTime =
-          punctuationsTime[punctuationsTime.indexOf(second) + 1];
+          punctuationsTime[punctuationsTime.indexOf(currentTimeAudio) + 1];
         numberOfExcerptsInSentence =
           excerptsForText[sentenceCount]["durations"].length;
         audio.currentTime = nextSentenceTime;
@@ -746,20 +772,3 @@ $(document).ready(function () {
     }
   });
 });
-
-// TODO
-//   (function () {
-//     $(audio).bind("timeupdate", function () {
-//       let s = parseInt(audio.currentTime % 60);
-//       let m = parseInt(audio.currentTime / 60) % 60;
-//       if (s < 10) {
-//         s = "0" + s;
-//       }
-//       $("#duration").html(`${m}:${s}`);
-//       let value = 0;
-//       if (audio.currentTime > 0) {
-//         value = Math.floor((100 / audio.duration) * audio.currentTime);
-//       }
-//       $("#progress").css("width", value + "%");
-//     });
-//   })();
