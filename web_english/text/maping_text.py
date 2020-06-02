@@ -232,21 +232,6 @@ class Recognizer():
             excerpts.pop(-1)
             return self.delete_last_empty_item(excerpts)
 
-    # def find_punctuations_time(self, excerpts):
-    #     punctuations_time = [0]
-    #     count = 0
-    #     for excerpt in excerpts:
-    #         if excerpt.find('.') != -1 or excerpt.find('!') != -1 or excerpt.find('?') != -1 or excerpt.find(';') != -1:
-    #             punctuation_indexes = self.search_punctuation_indexes(excerpt)
-    #             for punct_index in punctuation_indexes:
-    #                 interval_in_sec = Config.INTERVAL/1000
-    #                 punctuation_in_excerpt = (
-    #                     interval_in_sec / len(excerpt)) * punct_index
-    #                 punctuation_in_text = interval_in_sec * count + punctuation_in_excerpt
-    #                 punctuations_time.append(punctuation_in_text)
-    #         count += 1
-    #     return punctuations_time
-
     def search_punctuation_indexes(self, excerpt):
         punctuation_indexes = []
         element_search = [".", "!", "?", ";"]

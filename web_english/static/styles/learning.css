@@ -166,32 +166,35 @@
   transition: width 1.9s linear;
   width: 100%;
 }
-/* #tracker {
-position: relative;
-width: 100%;
+
+#tracker {
+  position: relative;
+  width: 100%;
 }
 #progress-bar {
-width: 80%;
-margin-left: 2%;
-margin-bottom: 20px;
-margin-top: 20px;
-height: 10px;
-background: rgb(78, 76, 76);
-float: left;
+  width: 50%;
+  margin-left: 9%;
+  margin-bottom: 20px;
+  margin-top: 20px;
+  height: 10px;
+  background: rgb(172, 172, 172);
+  float: left;
 }
 #progress {
-background: rgb(180, 122, 34);
-height: 10px;
-display: inline-block;
+  background: rgb(94, 49, 199);
+  height: 10px;
+  display: inline-block;
+  margin-bottom: 20px;
 }
 #duration {
-position: absolute;
-top: 0;
-right: 10px;
-padding: 4px 8px;
-background: rgb(209, 204, 204);
-border-radius: 5px;
-} */
+  position: absolute;
+  margin-right: 8%;
+  top: 0;
+  right: 10px;
+  padding: 4px 8px;
+  background: rgb(209, 204, 204);
+  border-radius: 5px;
+}
 
 #translation-word {
   width: 500px;
