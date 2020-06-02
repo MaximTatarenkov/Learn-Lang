@@ -2,7 +2,7 @@ $(document).ready(function () {
   let pause = false,
     stopPlay = true,
     second = 0,
-    currentExcerpt,
+    currentExcerpt = 0,
     sentenceCount,
     dataId = $("#text_en").attr("data-id"),
     url = "send_excerpts/" + dataId,
@@ -341,29 +341,119 @@ $(document).ready(function () {
 
   movingOnToSentence = function () {
     $(".sentence-in-text").click(function (event) {
-      let countThisSentence, idThisSentence, sentenceTime;
+      let countThisSentence,
+        idThisSentence,
+        sentenceTime,
+        numberOfExcerptsInSentence,
+        classOfSentence,
+        countExcerptInSentence;
       event.preventDefault();
       idThisSentence = $(this).attr("id");
-      countThisSentence = /\d+/.exec(idThisSentence);
-      sentenceTime = punctuationsTime[countThisSentence[0]];
-      if (sentenceTime > second) {
+      countThisSentence = Number(/\d+/.exec(idThisSentence)[0]);
+      sentenceTime = punctuationsTime[countThisSentence];
+      if (stopPlay) {
+        stopPlay = false;
+        pause = true;
+        for (let i = 0; i < countThisSentence; i++) {
+          numberOfExcerptsInSentence = excerptsForText[i]["durations"].length;
+          for (let e = 0; e < numberOfExcerptsInSentence; e++) {
+            $(`.excerpt-text.exc${currentExcerpt + e}`).addClass("active-fast");
+            $(`.excerpt-text.exc${currentExcerpt + e}`).removeClass(
+              "active-remove"
+            );
+          }
+          currentExcerpt += numberOfExcerptsInSentence;
+        }
+        audio.currentTime = sentenceTime;
+      } else if (pause) {
+        if (sentenceTime > second) {
+          classOfSentence = $(`#sentence${sentenceCount}`)
+            .find(".excerpt-text")
+            .attr("class");
+          countExcerptInSentence = /\d+/.exec(classOfSentence);
+          currentExcerpt = Number(countExcerptInSentence[0]);
+          for (let i = sentenceCount; i < countThisSentence; i++) {
+            numberOfExcerptsInSentence = excerptsForText[i]["durations"].length;
+            for (let e = 0; e < numberOfExcerptsInSentence; e++) {
+              $(`.excerpt-text.exc${currentExcerpt + e}`).addClass(
+                "active-fast"
+              );
+              $(`.excerpt-text.exc${currentExcerpt + e}`).removeClass(
+                "active-remove"
+              );
+            }
+            currentExcerpt += numberOfExcerptsInSentence;
+          }
+          audio.currentTime = sentenceTime;
+        } else if (sentenceTime < second) {
+          moveBack(countThisSentence, sentenceTime);
+        }
+      } else {
+        if (sentenceTime > second) {
+          pause = true;
+          audio.pause();
+          currentClass = $(`.excerpt-text.exc${currentExcerpt}`).attr("class");
+          classDuration = /active\d+/.exec(currentClass);
+          $(`.excerpt-text.exc${currentExcerpt}`).removeClass(classDuration);
+          $(`.excerpt-sentence.exc${currentExcerpt}`).removeClass(
+            classDuration
+          );
+          setTimeout(
+            addActiveFastForMovingOn,
+            25,
+            countThisSentence,
+            sentenceTime
+          );
+        } else if (sentenceTime < second) {
+          set_pause();
+          moveBack(countThisSentence, sentenceTime);
+        }
       }
-      audio.currentTime = sentenceTime;
     });
   };
 
-  // nextSentenceTime =
-  // punctuationsTime[punctuationsTime.indexOf(second) + 1];
-  numberOfExcerptsInSentence =
-    excerptsForText[sentenceCount]["durations"].length;
-  // audio.currentTime = nextSentenceTime;
-  for (let i = 0; i < numberOfExcerptsInSentence; i++) {
-    currentClass = $(`.excerpt-text.exc${currentExcerpt + i}`).attr("class");
-    classDuration = /active\d+/.exec(currentClass);
-    $(`.excerpt-text.exc${currentExcerpt + i}`).addClass("active-fast");
-    $(`.excerpt-text.exc${currentExcerpt + i}`).removeClass("active-remove");
-  }
-  currentExcerpt += numberOfExcerptsInSentence;
+  moveBack = function (countThisSentence, sentenceTime) {
+    classOfSentence = $(`#sentence${sentenceCount}`)
+      .find(".excerpt-text:last")
+      .attr("class");
+    countExcerptInSentence = /\d+/.exec(classOfSentence);
+    currentExcerpt = Number(countExcerptInSentence[0]);
+    for (let s = sentenceCount; s >= countThisSentence; s--) {
+      numberOfExcerptsInSentence = excerptsForText[s]["durations"].length;
+      for (let i = 0; i < numberOfExcerptsInSentence; i++) {
+        currentClass = $(`.excerpt-text.exc${currentExcerpt - i}`).attr(
+          "class"
+        );
+        classDuration = /active\d+/.exec(currentClass);
+        $(`.excerpt-text.exc${currentExcerpt - i}`).addClass("active-remove");
+        $(`.excerpt-text.exc${currentExcerpt - i}`).removeClass(classDuration);
+        $(`.excerpt-text.exc${currentExcerpt - i}`).removeClass("active-fast");
+      }
+      currentExcerpt -= numberOfExcerptsInSentence;
+    }
+    currentExcerpt += 1;
+    audio.currentTime = sentenceTime;
+  };
+
+  addActiveFastForMovingOn = function (countThisSentence, sentenceTime) {
+    let classOfSentence, countExcerptInSentence, numberOfExcerptsInSentence;
+    classOfSentence = $(`#sentence${sentenceCount}`)
+      .find(".excerpt-text")
+      .attr("class");
+    countExcerptInSentence = Number(/\d+/.exec(classOfSentence)[0]);
+    currentExcerpt = countExcerptInSentence;
+    for (let i = sentenceCount; i < countThisSentence; i++) {
+      numberOfExcerptsInSentence = excerptsForText[i]["durations"].length;
+      for (let e = 0; e < numberOfExcerptsInSentence; e++) {
+        $(`.excerpt-text.exc${currentExcerpt + e}`).addClass("active-fast");
+        $(`.excerpt-text.exc${currentExcerpt + e}`).removeClass(
+          "active-remove"
+        );
+      }
+      currentExcerpt += numberOfExcerptsInSentence;
+    }
+    audio.currentTime = sentenceTime;
+  };
 
   playFromBeginning = function () {
     pause = false;
@@ -432,6 +522,7 @@ $(document).ready(function () {
   };
 
   $(document).keydown(function (e) {
+    e.preventDefault();
     if (e.which == 32) {
       if (stopPlay) {
         playFromBeginning();
@@ -444,18 +535,21 @@ $(document).ready(function () {
   });
 
   $(document).keydown(function (e) {
+    e.preventDefault();
     if (e.which == 37) {
       set_back();
     }
   });
 
   $(document).keydown(function (e) {
+    e.preventDefault();
     if (e.which == 39) {
       set_forvard();
     }
   });
 
   $(document).keydown(function (e) {
+    e.preventDefault();
     if (e.which == 40) {
       stop_playing();
     }
@@ -490,6 +584,7 @@ $(document).ready(function () {
     $(".excerpt-text").addClass("active-remove");
     $(".excerpt-sentence").removeClass("active-fast");
     $(".excerpt-sentence").addClass("active-remove");
+    currentExcerpt = 0;
     return;
   };
 
@@ -510,11 +605,13 @@ $(document).ready(function () {
       return;
     } else if (pause) {
       if (punctuationsTime.indexOf(second) !== -1) {
+        if (second >= punctuationsTime[punctuationsTime.length - 1]) {
+          sentenceCount += 1;
+        }
         previousSentenceTime =
           punctuationsTime[punctuationsTime.indexOf(second) - 1];
         numberOfExcerptsInSentence =
           excerptsForText[sentenceCount - 1]["durations"].length;
-        audio.currentTime = previousSentenceTime;
         for (let i = 0; i < numberOfExcerptsInSentence; i++) {
           currentClass = $(`.excerpt-text.exc${currentExcerpt - (i + 1)}`).attr(
             "class"
@@ -531,19 +628,20 @@ $(document).ready(function () {
           );
         }
         currentExcerpt -= numberOfExcerptsInSentence;
+        audio.currentTime = previousSentenceTime;
       } else {
         currentExcerpt -= 1;
         currentClass = $(`.excerpt-text.exc${currentExcerpt}`).attr("class");
         classDuration = /active\d+/.exec(currentClass);
         timeDuration =
           $(`.excerpt-text.exc${currentExcerpt}`).attr("data-duration") / 10;
-        audio.currentTime -= timeDuration;
         $(`.excerpt-text.exc${currentExcerpt}`).addClass("active-remove");
         $(`.excerpt-text.exc${currentExcerpt}`).removeClass(classDuration);
         $(`.excerpt-text.exc${currentExcerpt}`).removeClass("active-fast");
         $(`.excerpt-sentence.exc${currentExcerpt}`).addClass("active-remove");
         $(`.excerpt-sentence.exc${currentExcerpt}`).removeClass(classDuration);
         $(`.excerpt-sentence.exc${currentExcerpt}`).removeClass("active-fast");
+        audio.currentTime -= timeDuration;
       }
     } else {
       set_pause();
@@ -556,6 +654,9 @@ $(document).ready(function () {
   };
 
   set_forvard = function () {
+    if (second >= punctuationsTime[punctuationsTime.length - 1]) {
+      return;
+    }
     let timeDuration,
       nextSentenceTime,
       numberOfExcerptsInSentence,
@@ -635,10 +736,6 @@ $(document).ready(function () {
   $("#volume").change(function () {
     audio.volume = parseFloat(this.value / 10);
   });
-
-  // audio.addEventListener("ended", function () {
-  //   setTimeout(stop_playing, 4000);
-  // });
 
   document.addEventListener("visibilitychange", function () {
     if (document.visibilityState !== "visible") {
