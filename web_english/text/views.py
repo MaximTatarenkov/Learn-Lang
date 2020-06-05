@@ -56,17 +56,15 @@ def process_create():
 @roles_required('admin', 'contentmaker')
 def texts_list():
     title = 'Список текстов'
-    contents = Content.query.all()
     return render_template(
         'text/texts_list.html',
-        title=title,
-        contents=contents
+        title=title
     )
 
 
 @login_required
 @roles_required('admin', 'contentmaker')
-def edit_text(text_id):
+def edit_maping(text_id):
     form = EditForm()
     content = Content.query.filter(Content.id == text_id).first()
     title_text = content.title_text
@@ -84,17 +82,17 @@ def edit_text(text_id):
     recognizer = Recognizer(title_text)
     chunks_text = recognizer.list_chunks_text(text_id, chunks_result)
     merged_chunks = list(zip(chunks_text, chunks_result, count_list))
-    return render_template('text/edit_text.html',
+    return render_template('text/edit_maping.html',
                            content=content,
                            title_page=title_page,
                            merged_chunks=merged_chunks,
                            form=form,
-                           form_action=url_for('text.process_edit_text', id=content.id))
+                           form_action=url_for('text.process_edit_maping', id=content.id))
 
 
 @login_required
 @roles_required('admin', 'contentmaker')
-def process_edit_text():
+def process_edit_maping():
     text_id = request.args.get('id')
     content = Content.query.filter(Content.id == text_id).first()
     title_text = content.title_text
@@ -132,3 +130,18 @@ def serve_audio(text_id, count):
     folder = f"{Config.UPLOADED_AUDIOS_DEST}/{create_name(content.title_text)}"
     filename = f"chunk{count}.ogg"
     return send_from_directory(folder, filename)
+
+
+@login_required
+def edit_hover(text_id):
+    return render_template('text/edit_hover_translations.html')
+
+
+@login_required
+def give_content_list_for_edit():
+    contents = Content.query.order_by(Content.created_at).all()
+    contents_list = []
+    for content in contents:
+        contents_list.append(
+            {"title": content.title_text, "id": content.id, "is_ready": content.is_ready})
+    return jsonify(contents_list)

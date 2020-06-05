@@ -1,3 +1,4 @@
+from datetime import timedelta
 import os
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -14,6 +15,8 @@ class Config:
 
     # Upload Audio configuration
     UPLOADED_AUDIOS_DEST = f"{BASE_DIR}/web_english/text/uploads/audio"
+
+    REMEMBER_COOKIE_DURATION = timedelta(days=10)
 
     # Send Email configuration
     MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER")

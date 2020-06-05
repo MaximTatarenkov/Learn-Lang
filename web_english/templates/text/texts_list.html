@@ -1,55 +1,109 @@
 {% extends "base.html" %} {% block content %}
 <h1><p>{{ title }}</p></h1>
-<h4>
-  <ol>
-    {% for content in contents | reverse %}
-    <li id="{{ content.id }}" class="list-text" data-id="{{ content.id }}">
-      {% if not content.is_ready %}
-      <div class="upload-text{{ content.id }}">
-        <a href="{{ url_for('text.edit_text', text_id=content.id) }}"
-          >{{ content.title_text }}</a
-        >
-        <div class="progress {{ content.id }}">
-          <div class="progress-bar {{ content.id }}" style="width: 0%;">0%</div>
-        </div>
-      </div>
-      {% else %}
-      <a href="{{ url_for('text.edit_text', text_id=content.id) }}"
-        >{{ content.title_text }}</a
-      >
-      {% endif %}
-    </li>
-    {% endfor %}
-  </ol>
-</h4>
+
+<table class="table">
+  <thead>
+    <tr align="center" class="row">
+      <th class="col-4">Название</th>
+      <th class="col-2">Редактирование текста</th>
+      <th class="col-2">Редактирование переводов разметки</th>
+      <th class="col-2">Редактирование переводов в тексте</th>
+      <th class="col-2">Редактирование переводов слов</th>
+    </tr>
+  </thead>
+  <tbody id="table-body"></tbody>
+</table>
+
 {% endblock %} {% block js %}
 <script src="{{ url_for('static', filename='scripts/jquery-3.5.1.js') }}"></script>
 <script>
   $(document).ready(function () {
-    $("li.list-text").each(function (index, element) {
-      let dataId = $(element).attr("data-id");
-      let url = "progress/" + dataId;
-      let timerId = setInterval(function () {
-        $.getJSON(url, function (result) {
-          console.log(result);
-          if (result.status == 2) {
-            $(`.progress-bar.${dataId}`)
-              .css("width", result.progress + "%")
-              .text(Math.round(result.progress) + "%");
-          } else if (result.status == 3) {
-            clearInterval(timerId);
-            $(`.progress-bar.${dataId}`)
-              .css("width", result.progress + "%")
-              .text(Math.round(result.progress) + "%");
-            setTimeout(anythingRemove, 2000, $(`.progress.${dataId}`));
-          } else {
-            clearInterval(timerId);
-            anythingRemove($(`.progress.${dataId}`));
-            $(`.upload-text${dataId}`).after("<span>Error</span>");
-          }
-        });
-      }, 2000);
-    });
+    let contentsList;
+    (function () {
+      let url = "content-list-for-edit";
+      $.getJSON(url, function (result) {
+        contentsList = result;
+        composeContents();
+        runProgressBars();
+      });
+    })();
+
+    composeContents = function () {
+      contentsHTML = document.getElementById("table-body");
+      contentsList.forEach((content) => {
+        if (content["is_ready"]) {
+          contentsHTML.insertAdjacentHTML(
+            "beforeend",
+            `<tr id=${content["id"]} class="list-content row" align="center">
+              <td class="col-4"><h4>${content["title"]}</h4></td>
+              <td class="col-2"><a class="btn btn-primary edit-texts" href="/text/edit_texts/${content["id"]}" role="button">Edit texts</a>
+              </td>
+              <td class="col-2"><a class="btn btn-primary edit-maping" href="/text/edit_maping/${content["id"]}" role="button">Edit maping</a>
+              </td>
+              <td class="col-2"><a class="btn btn-primary edit-hover" href="/text/edit_hover/${content["id"]}" role="button">Edit hover</a>
+              </td>
+              <td class="col-2"><a class="btn btn-primary edit-translation" href="/text/edit_translation/${content["id"]}" role="button">Edit translation</a>
+              </td>
+            </tr>`
+          );
+        } else {
+          contentsHTML.insertAdjacentHTML(
+            "beforeend",
+            `<tr id=${content["id"]} class="list-content row" align="center">
+              <td class="col-4"><h4>${content["title"]}</h4></td>
+              <td id="upload-text${content["id"]}" class="col-8">
+                  <div class="progress ${content["id"]}">
+                    <div class="progress-bar ${content["id"]}" style="width: 0%;">0%</div>
+                  </div>
+              </td>
+            </tr>`
+          );
+        }
+      });
+    };
+
+    runProgressBars = function () {
+      $("tr.list-content").each(function (index, element) {
+        let dataId = $(element).attr("id"),
+          url = "progress/" + dataId,
+          timerId = setInterval(function () {
+            $.getJSON(url, function (result) {
+              if (result.status == 2) {
+                $(`.progress-bar.${dataId}`)
+                  .css("width", result.progress + "%")
+                  .text(Math.round(result.progress) + "%");
+              } else if (
+                result.status == 3 &&
+                $("td").is(`#upload-text${dataId}`)
+              ) {
+                let buttonsHTML = document.getElementById(dataId);
+                clearInterval(timerId);
+                $(`.progress-bar.${dataId}`)
+                  .css("width", result.progress + "%")
+                  .text(Math.round(result.progress) + "%");
+                setTimeout(anythingRemove, 2000, $(`#upload-text${dataId}`));
+                buttonsHTML.insertAdjacentHTML(
+                  "beforeend",
+                  `<td class="col-2"><a class="btn btn-primary edit-texts" href="/text/edit_texts/${dataId}" role="button">Edit texts</a>
+                  </td>
+                  <td class="col-2"><a class="btn btn-primary edit-maping" href="/text/edit_maping/${dataId}" role="button">Edit maping</a>
+                  </td>
+                  <td class="col-2"><a class="btn btn-primary edit-hover" href="/text/edit_hover/${dataId}" role="button">Edit hover</a>
+                  </td>
+                  <td class="col-2"><a class="btn btn-primary edit-translation" href="/text/edit_translation/${dataId}" role="button">Edit translation</a>
+                  </td>`
+                );
+              } else {
+                clearInterval(timerId);
+                anythingRemove($(`.progress.${dataId}`));
+                $(`#upload-text${dataId}`).after("<span>Error</span>");
+              }
+            });
+          }, 2000);
+        console.log(document.getElementById(dataId));
+      });
+    };
+
     function anythingRemove(anything) {
       anything.remove();
     }

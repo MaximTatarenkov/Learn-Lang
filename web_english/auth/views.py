@@ -23,7 +23,7 @@ def process_login():
         user = User.query.filter_by(username=form.username.data).first()
         if user and user.check_password(form.password.data):
             if user.is_email_confirmed:
-                login_user(user)
+                login_user(user, remember=form.remember_me.data)
                 flash("Вы вошли на сайт")
                 return redirect(url_for("main.index"))
             flash("Вы не подтвердили почту")
@@ -64,7 +64,8 @@ def process_register():
     db.session.add(new_user)
     db.session.commit()
     send_verification_email(new_user)
-    flash(f"Осталось подтвердить вашу почту. Инструкция была отправлена на {new_user.email}")
+    flash(
+        f"Осталось подтвердить вашу почту. Инструкция была отправлена на {new_user.email}")
     return redirect(url_for("main.index"))
 
 
