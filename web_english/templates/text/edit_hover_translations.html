@@ -1,0 +1,27 @@
+{% extends "base.html" %} {% block content %}
+<h1>{{ title_page }}</h1>
+<div class="row">
+  <div class="col-8">
+    <h3>Рабочая область</h3>
+    <div class="selected-words"></div>
+    <div class="senteces">
+      <p class="en-sentence"></p>
+      <p class="ru-sentence"></p>
+    </div>
+    <div class="basic-buttons">
+      <button id="save-button">Save</button>
+      <button id="previous-button">Previous</button>
+      <button id="next-button">Next</button>
+      <button id="exit-button">Exit</button>
+    </div>
+    <div class="sentence-buttons"></div>
+  </div>
+  <div class="col-4">
+    <h3>Слова для сохранения</h3>
+    <div class="add-buttons">
+      <button id="add-button">Add</button>
+    </div>
+    <div class="words-for-saving"></div>
+  </div>
+</div>
+{% endblock %}

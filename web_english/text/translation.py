@@ -104,42 +104,6 @@ def create_translations_for_highlight(word, translations_for_click):
     return translations_for_highlight
 
 
-# def create_translations_for_click(word, translations_pons, translations_yandex):
-#     translations_for_click = {"translations": []}
-#     if translations_pons:
-#         for translation_po in translations_pons:
-#             check = len(re.findall(rf"\b{word}\b", translation_po["source"]))
-#             if check >= 1:
-#                 cleaned_en_string = re.sub(
-#                     r'-', ' ', translation_po["source"])
-#                 cleaned_en_string = re.sub(
-#                     r'\bsth\b', 'something', cleaned_en_string)
-#                 cleaned_en_string = re.sub(
-#                     r'\bsb\b', 'somebody', cleaned_en_string)
-#                 cleaned_en_string = re.sub(
-#                     r'\bsb/sth\b', 'somebody/something', cleaned_en_string)
-#                 without_accent = strip_accents(translation_po["target"])
-#                 cleaned_ru_string = re.sub(
-#                     r'[a-z]', '', without_accent)
-#                 cleaned_ru_string = re.sub(
-#                     r'\bмн\b', '', cleaned_ru_string)
-#                 cleaned_ru_string = re.sub(
-#                     r'  ', ' ', cleaned_ru_string)
-#                 cleaned_ru_string = re.sub(
-#                     r'ё', 'е', cleaned_ru_string)
-#                 cleaned_ru_string = re.sub(
-#                     r' ,', ',', cleaned_ru_string).strip()
-#                 translations_for_click['translations'].append(
-#                     {"en": cleaned_en_string, "ru": cleaned_ru_string})
-#     if translations_yandex:
-#         for translation_ya in translations_yandex:
-#             translation_for_comparison = {"en": word, "ru": translation_ya}
-#             if translation_for_comparison not in translations_for_click['translations']:
-#                 translations_for_click['translations'].append(
-#                     {"en": word, "ru": translation_ya})
-#     return translations_for_click
-
-
 def strip_accents(string):
     without_accent = ''
     for w in string:
