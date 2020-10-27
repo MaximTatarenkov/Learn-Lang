@@ -17,7 +17,7 @@ click==7.1.1
 click-completion==0.5.2
 colorama==0.4.3
 crayons==0.3.0
-cryptography==2.9.2
+cryptography==3.2
 cycler==0.10.0
 decorator==4.4.2
 dnspython==1.16.0
