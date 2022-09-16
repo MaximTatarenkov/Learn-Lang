@@ -41,7 +41,7 @@ kombu==4.6.8
 librosa==0.7.2
 llvmlite==0.32.0
 logmmse==1.4
-Mako==1.1.2
+Mako==1.2.2
 MarkupSafe==1.1.1
 matplotlib==3.2.1
 mccabe==0.6.1
